@@ -2,7 +2,7 @@
   "name": "The Weekly Haul",
   "short_name": "Weekly Haul",
   "description": "Trader Joe's shopping list for the Bravo household",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#F5F0E8",
   "theme_color": "#CC2936",

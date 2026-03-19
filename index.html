@@ -452,9 +452,9 @@
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('suspects')">The Usual Suspects</button>
-    <button class="tab-btn" onclick="switchTab('finds')">This Week's Finds</button>
-    <button class="tab-btn" onclick="switchTab('costco')">Costco Run</button>
+    <button class="tab-btn active" onclick="switchTab('suspects', this)">The Usual Suspects</button>
+    <button class="tab-btn" onclick="switchTab('finds', this)">This Week's Finds</button>
+    <button class="tab-btn" onclick="switchTab('costco', this)">Costco Run</button>
   </div>
 
   <!-- TAB 1: USUAL SUSPECTS -->
@@ -581,11 +581,11 @@ function setSyncing(active) {
 }
 
 // ── TABS ──
-function switchTab(tab) {
+function switchTab(tab, btn) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  event.target.classList.add('active');
+  btn.classList.add('active');
 }
 
 // ── STANDING LIST ──
@@ -642,7 +642,9 @@ function renderStanding() {
       if (e.key === 'Enter') addStandingItem(catKey);
     });
     block.appendChild(addRow);
-    block.appendChild(document.createElement('hr') && (() => { const hr = document.createElement('hr'); hr.className = 'divider'; return hr; })());
+    const divider = document.createElement('hr');
+    divider.className = 'divider';
+    block.appendChild(divider);
 
     container.appendChild(block);
   });
@@ -846,7 +848,7 @@ function clearCheckedCostco() {
 
 // ── RESET WEEK ──
 function resetWeek() {
-  if (!confirm('Reset week? This will clear all checked items across all lists.')) return;
+  if (!confirm('Reset week? Standing items will be unchecked. This Week\'s Finds will be deleted. Costco items will be unchecked.')) return;
   setSyncing(true);
 
   // Clear checked standing items
@@ -855,10 +857,10 @@ function resetWeek() {
       if (item.checked) ref(`standing/${catKey}/${id}/checked`).set(false);
     });
   });
-  // Clear checked finds
-  Object.entries(findsData).forEach(([id, item]) => {
-    if (item.checked) ref(`finds/${id}/checked`).set(false);
-  });
+  // Delete all finds (they're one-off items, clear them on reset)
+  const findsUpdates = {};
+  Object.entries(findsData).forEach(([id]) => { findsUpdates[id] = null; });
+  if (Object.keys(findsUpdates).length) ref('finds').update(findsUpdates);
   // Clear checked costco
   Object.entries(costcoData).forEach(([id, item]) => {
     if (item.checked) ref(`costco/${id}/checked`).set(false);
