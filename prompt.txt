@@ -1,0 +1,82 @@
+Build a Trader Joe's themed shared grocery list web app. Single HTML file (index.html) with embedded CSS and JS. Firebase Realtime Database for shared state.
+
+## Firebase Config
+Use this config:
+```js
+const firebaseConfig = {
+  apiKey: "AIzaSyAZh0w7iqobGaP4JmkYzr0sTMTD2JuZW8Q",
+  authDomain: "baja-trip-a8117.firebaseapp.com",
+  databaseURL: "https://baja-trip-a8117-default-rtdb.firebaseio.com",
+  projectId: "baja-trip-a8117",
+  storageBucket: "baja-trip-a8117.appspot.com",
+  messagingSenderId: "448511336756",
+  appId: "1:448511336756:web:placeholder"
+};
+```
+Firebase path: `/tj-list/`
+
+## Design — Fearless Flyer Aesthetic (CRITICAL — nail this)
+- **Background:** cream/parchment `#F5F0E8`
+- **Primary red:** `#CC2936` (TJ's red)
+- **Navy:** `#1B2A4A`
+- **Forest green:** `#2D5016`
+- **Warm tan:** `#D4A853`
+- **Font:** Use Google Fonts — "Playfair Display" (serif, bold for headers) + "Lora" (body)
+- **Header:** Big bold Playfair Display banner styled like a newspaper masthead. Text: "THE WEEKLY HAUL" in red with a thin decorative border above/below. Subtext: "Trader Joe's Shopping List" in smaller navy italic
+- **Paper texture:** subtle noise/grain CSS background overlay on body
+- **Section headers:** look like flyer section banners — bold, caps, red background with cream text, slight tilt or stamp feel (use CSS transform: rotate(-0.5deg) on some)
+- **Cards/list items:** cream cards with a thin red or navy left border
+- **Checkboxes:** custom styled, red checkmark when checked
+- **Buttons:** bold, red or navy, rounded corners, look like rubber stamps
+- **Decorative elements:** thin horizontal rules styled like newspaper column dividers between sections
+- **Overall vibe:** You're reading a 1950s supermarket newsletter. Warm, editorial, not digital-sterile.
+
+## Features
+
+### Password Gate
+- Simple password check on load. Password: `Bravo`
+- Remember Me checkbox (localStorage). If remembered, skip gate.
+- Style the gate like a Fearless Flyer cover page — big "THE WEEKLY HAUL" masthead, password field below
+
+### Main App — Three Tabs
+Tab labels styled like flyer section headers:
+
+**1. THE USUAL SUSPECTS** (Standing List)
+- Pre-populated categories: Produce, Dairy & Eggs, Frozen, Meat & Seafood, Pantry & Dry Goods, Snacks, Beverages, Bakery, Household
+- Items within each category are checkboxes
+- Checked items get a strikethrough + fade (still visible)
+- "Clear Checked" button per category — removes checked items from list
+- "Add Item" inline input per category — type item name, press Enter or click "+" to add
+- All items and checked state saved to Firebase `/tj-list/standing/`
+- Real-time sync — if Ashley adds something on her phone, Ryan sees it instantly
+
+**2. THIS WEEK'S FINDS** (New / one-off items)
+- Section header: "NEW ARRIVALS & ONE-OFFS"
+- Simple add form: item name + optional note (e.g., "Fearless Flyer find", "seasonal")
+- Items shown as cards with checkbox + item name + note badge
+- Checked = done/grabbed. "Clear Checked" button at top.
+- Firebase path: `/tj-list/finds/`
+- Styled differently — slightly more excited/highlighted, maybe a "★ NEW" badge option
+
+**3. COSTCO RUN** (Overflow list)
+- Simple checklist, no categories
+- Add items, check off, clear checked
+- Firebase path: `/tj-list/costco/`
+- Slightly different color accent — use navy instead of red for this section
+
+### Global Features
+- Real-time Firebase sync across all tabs (both users see changes live)
+- "Reset Week" button (bottom, subtle) — clears ALL checked items across all tabs, resets for new week. Confirm dialog before running.
+- Last synced timestamp in footer
+- PWA-ready: add `<meta>` viewport tags, theme-color `#CC2936`
+- Mobile-friendly: stacked layout on small screens, big tap targets on checkboxes
+
+## Technical
+- Single `index.html` file — no build step, no framework
+- Firebase SDK via CDN (compat v9 is fine): `https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js` and `firebase-database-compat.js`
+- All CSS inline in `<style>` tags
+- All JS inline in `<script>` tags
+- No external dependencies except Google Fonts + Firebase CDN
+
+When completely finished, run this command to notify:
+openclaw system event --text "Done: TJ List grocery app built — ready to review at ~/Projects/tj-list/index.html" --mode now

@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="The Weekly Haul">
+  <meta name="theme-color" content="#CC2936">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>The Weekly Haul</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #F5F0E8;
+      --cream-dark: #EDE7D9;
+      --red: #CC2936;
+      --red-dark: #A81F2A;
+      --navy: #1B2A4A;
+      --green: #2D5016;
+      --tan: #D4A853;
+      --ink: #2C2416;
+      --ink-light: #5C4F3A;
+    }
+
+    body {
+      background-color: var(--cream);
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      font-family: 'Lora', Georgia, serif;
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* ── PASSWORD GATE ── */
+    #gate {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+    #gate .masthead {
+      border-top: 4px double var(--ink);
+      border-bottom: 4px double var(--ink);
+      padding: 0.5rem 2rem;
+      margin-bottom: 1.5rem;
+    }
+    #gate .masthead h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 8vw, 4rem);
+      font-weight: 900;
+      color: var(--red);
+      letter-spacing: 0.05em;
+      line-height: 1;
+    }
+    #gate .masthead p {
+      font-family: 'Lora', serif;
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--navy);
+      margin-top: 0.3rem;
+    }
+    #gate .rule {
+      width: 100%;
+      max-width: 400px;
+      height: 1px;
+      background: var(--ink);
+      margin: 1rem 0;
+      opacity: 0.3;
+    }
+    #gate .gate-box {
+      background: white;
+      border: 1px solid #c8bfaa;
+      border-radius: 4px;
+      padding: 2rem;
+      max-width: 340px;
+      width: 100%;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    #gate .gate-box p {
+      font-style: italic;
+      color: var(--ink-light);
+      margin-bottom: 1.2rem;
+      font-size: 0.95rem;
+    }
+    #gate input[type="password"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--ink);
+      border-radius: 3px;
+      font-family: 'Lora', serif;
+      font-size: 1.1rem;
+      background: var(--cream);
+      color: var(--ink);
+      text-align: center;
+      letter-spacing: 0.2em;
+      margin-bottom: 1rem;
+    }
+    #gate input[type="password"]:focus { outline: none; border-color: var(--red); }
+    .remember-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      color: var(--ink-light);
+    }
+    #gate-error {
+      color: var(--red);
+      font-size: 0.9rem;
+      min-height: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ── MAIN APP ── */
+    #app { display: none; max-width: 680px; margin: 0 auto; padding: 0 0 6rem; }
+
+    /* Masthead */
+    .app-masthead {
+      text-align: center;
+      padding: 1.2rem 1rem 0;
+      border-bottom: 4px double var(--ink);
+      margin-bottom: 0;
+    }
+    .app-masthead h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 6vw, 3rem);
+      font-weight: 900;
+      color: var(--red);
+      letter-spacing: 0.06em;
+      line-height: 1;
+    }
+    .app-masthead .subtitle {
+      font-style: italic;
+      color: var(--navy);
+      font-size: 0.9rem;
+      margin: 0.2rem 0 0.8rem;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 3px solid var(--ink);
+      background: var(--cream-dark);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 0.7rem 0.4rem;
+      border: none;
+      background: transparent;
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: clamp(0.6rem, 2.5vw, 0.8rem);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ink-light);
+      cursor: pointer;
+      border-right: 1px solid #c8bfaa;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tab-btn:last-child { border-right: none; }
+    .tab-btn.active {
+      background: var(--red);
+      color: white;
+    }
+    .tab-btn:not(.active):hover { background: #e8e0d0; }
+
+    /* Tab panels */
+    .tab-panel { display: none; padding: 1rem; }
+    .tab-panel.active { display: block; }
+
+    /* Section banners */
+    .section-banner {
+      background: var(--red);
+      color: white;
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 0.4rem 0.8rem;
+      margin: 1rem 0 0.5rem;
+      transform: rotate(-0.3deg);
+      display: inline-block;
+    }
+    .section-banner.navy { background: var(--navy); }
+    .section-banner.green { background: var(--green); }
+
+    .section-block { margin-bottom: 1.5rem; }
+    .section-block .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #c0b49a;
+      margin: 0.8rem 0;
+    }
+
+    /* Item cards */
+    .item-card {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: white;
+      border-left: 3px solid var(--red);
+      padding: 0.55rem 0.75rem;
+      margin-bottom: 0.4rem;
+      border-radius: 0 3px 3px 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      transition: opacity 0.2s;
+    }
+    .item-card.navy-border { border-left-color: var(--navy); }
+    .item-card.checked {
+      opacity: 0.5;
+    }
+    .item-card.checked .item-label {
+      text-decoration: line-through;
+      color: var(--ink-light);
+    }
+
+    /* Custom checkbox */
+    .item-check {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      border: 2px solid var(--red);
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+      background: white;
+    }
+    .item-check.navy { border-color: var(--navy); }
+    .item-check:checked {
+      background: var(--red);
+    }
+    .item-check.navy:checked { background: var(--navy); }
+    .item-check:checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -52%);
+      color: white;
+      font-size: 13px;
+      font-weight: bold;
+      line-height: 1;
+    }
+
+    .item-label {
+      flex: 1;
+      font-size: 0.95rem;
+      color: var(--ink);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      font-style: italic;
+      color: var(--ink-light);
+      background: var(--cream-dark);
+      padding: 0.1rem 0.4rem;
+      border-radius: 10px;
+      border: 1px solid #c8bfaa;
+      white-space: nowrap;
+    }
+
+    .new-badge {
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: var(--red);
+      border: 1px solid var(--red);
+      padding: 0.1rem 0.4rem;
+      border-radius: 2px;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #c0b49a;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0 0.2rem;
+      line-height: 1;
+    }
+    .delete-btn:hover { color: var(--red); }
+
+    /* Add item row */
+    .add-row {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.5rem;
+    }
+    .add-row input[type="text"] {
+      flex: 1;
+      padding: 0.5rem 0.7rem;
+      border: 1px solid #c8bfaa;
+      border-radius: 3px;
+      font-family: 'Lora', serif;
+      font-size: 0.9rem;
+      background: white;
+      color: var(--ink);
+    }
+    .add-row input[type="text"]:focus { outline: none; border-color: var(--red); }
+    .add-row input.navy-focus:focus { border-color: var(--navy); }
+
+    /* Buttons */
+    .btn {
+      padding: 0.45rem 0.9rem;
+      border: none;
+      border-radius: 3px;
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-red { background: var(--red); color: white; }
+    .btn-red:hover { background: var(--red-dark); }
+    .btn-navy { background: var(--navy); color: white; }
+    .btn-navy:hover { background: #111d33; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink-light);
+      border: 1px solid #c8bfaa;
+      font-size: 0.75rem;
+    }
+    .btn-ghost:hover { background: var(--cream-dark); }
+    .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.72rem; }
+
+    /* Finds — add form */
+    .finds-add-form {
+      background: white;
+      border: 1px solid #c8bfaa;
+      border-radius: 4px;
+      padding: 0.8rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .finds-add-form input, .finds-add-form select {
+      width: 100%;
+      padding: 0.5rem 0.7rem;
+      border: 1px solid #c8bfaa;
+      border-radius: 3px;
+      font-family: 'Lora', serif;
+      font-size: 0.9rem;
+      background: var(--cream);
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+    }
+    .finds-add-form input:focus, .finds-add-form select:focus {
+      outline: none;
+      border-color: var(--red);
+    }
+    .finds-add-form .form-row {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    /* Reset week button */
+    .reset-area {
+      text-align: center;
+      padding: 1.5rem 1rem 0.5rem;
+      border-top: 1px solid #c0b49a;
+      margin-top: 1rem;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      font-size: 0.75rem;
+      font-style: italic;
+      color: #9a8e7a;
+      padding: 0.5rem;
+    }
+
+    /* Sync indicator */
+    .sync-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .sync-dot.syncing { background: var(--tan); animation: pulse 1s infinite; }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      color: var(--ink-light);
+      font-style: italic;
+      font-size: 0.9rem;
+      padding: 1rem 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 400px) {
+      .tab-btn { font-size: 0.55rem; padding: 0.6rem 0.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── GATE ── -->
+<div id="gate">
+  <div class="masthead">
+    <h1>THE WEEKLY HAUL</h1>
+    <p>Trader Joe's Shopping List</p>
+  </div>
+  <div class="rule"></div>
+  <div class="gate-box">
+    <p>Members only. Enter the password to continue.</p>
+    <input type="password" id="gate-input" placeholder="••••••" autocomplete="off">
+    <div class="remember-row">
+      <input type="checkbox" id="remember-me">
+      <label for="remember-me">Remember me on this device</label>
+    </div>
+    <div id="gate-error"></div>
+    <button class="btn btn-red" onclick="checkPassword()" style="width:100%">Enter the Flyer →</button>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <div class="app-masthead">
+    <h1>THE WEEKLY HAUL</h1>
+    <p class="subtitle">Trader Joe's Shopping List · Bravo Household</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('suspects')">The Usual Suspects</button>
+    <button class="tab-btn" onclick="switchTab('finds')">This Week's Finds</button>
+    <button class="tab-btn" onclick="switchTab('costco')">Costco Run</button>
+  </div>
+
+  <!-- TAB 1: USUAL SUSPECTS -->
+  <div id="tab-suspects" class="tab-panel active"></div>
+
+  <!-- TAB 2: THIS WEEK'S FINDS -->
+  <div id="tab-finds" class="tab-panel">
+    <div class="section-block">
+      <div class="section-header">
+        <span class="section-banner">★ New Arrivals & One-Offs</span>
+        <button class="btn btn-ghost btn-sm" onclick="clearCheckedFinds()">Clear Checked</button>
+      </div>
+      <div class="finds-add-form">
+        <input type="text" id="find-name" placeholder="Item name...">
+        <div class="form-row">
+          <input type="text" id="find-note" placeholder="Note (optional — e.g. Fearless Flyer find)" style="flex:1">
+          <button class="btn btn-red" onclick="addFind()">+ Add</button>
+        </div>
+      </div>
+      <div id="finds-list"></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: COSTCO -->
+  <div id="tab-costco" class="tab-panel">
+    <div class="section-block">
+      <div class="section-header">
+        <span class="section-banner navy">Costco Run</span>
+        <button class="btn btn-ghost btn-sm" onclick="clearCheckedCostco()">Clear Checked</button>
+      </div>
+      <div class="add-row" style="margin-bottom:0.8rem">
+        <input type="text" id="costco-input" class="navy-focus" placeholder="Add item...">
+        <button class="btn btn-navy" onclick="addCostcoItem()">+</button>
+      </div>
+      <div id="costco-list"></div>
+    </div>
+  </div>
+
+  <!-- RESET + FOOTER -->
+  <div class="reset-area">
+    <button class="btn btn-ghost" onclick="resetWeek()">↺ Reset Week (clear all checked)</button>
+  </div>
+  <div class="footer">
+    <span class="sync-dot" id="sync-dot"></span>
+    <span id="sync-label">Connected</span>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<script>
+// ── CONFIG ──
+const PASSWORD = 'Bravo';
+const CATEGORIES = [
+  'Produce',
+  'Dairy & Eggs',
+  'Frozen',
+  'Meat & Seafood',
+  'Pantry & Dry Goods',
+  'Snacks',
+  'Beverages',
+  'Bakery',
+  'Household'
+];
+
+// ── FIREBASE ──
+const firebaseConfig = {
+  apiKey: "AIzaSyAZh0w7iqobGaP4JmkYzr0sTMTD2JuZW8Q",
+  authDomain: "baja-trip-a8117.firebaseapp.com",
+  databaseURL: "https://baja-trip-a8117-default-rtdb.firebaseio.com",
+  projectId: "baja-trip-a8117",
+  storageBucket: "baja-trip-a8117.appspot.com",
+  messagingSenderId: "448511336756",
+  appId: "1:448511336756:web:tjlist001"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const ref = (path) => db.ref('/tj-list/' + path);
+
+// ── GATE ──
+function checkPassword() {
+  const val = document.getElementById('gate-input').value;
+  if (val === PASSWORD) {
+    if (document.getElementById('remember-me').checked) {
+      localStorage.setItem('tjlist-auth', '1');
+    }
+    showApp();
+  } else {
+    document.getElementById('gate-error').textContent = 'Wrong password. Try again.';
+    document.getElementById('gate-input').value = '';
+  }
+}
+document.getElementById('gate-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkPassword();
+});
+
+function showApp() {
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  initStanding();
+  initFinds();
+  initCostco();
+  setSyncing(false);
+}
+
+if (localStorage.getItem('tjlist-auth') === '1') {
+  showApp();
+}
+
+// ── SYNC INDICATOR ──
+function setSyncing(active) {
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  if (active) {
+    dot.className = 'sync-dot syncing';
+    label.textContent = 'Syncing...';
+  } else {
+    dot.className = 'sync-dot';
+    const now = new Date();
+    label.textContent = 'Synced ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  }
+}
+
+// ── TABS ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── STANDING LIST ──
+let standingData = {};
+
+function initStanding() {
+  ref('standing').on('value', snap => {
+    standingData = snap.val() || {};
+    renderStanding();
+    setSyncing(false);
+  });
+}
+
+function renderStanding() {
+  const container = document.getElementById('tab-suspects');
+  container.innerHTML = '';
+
+  CATEGORIES.forEach(cat => {
+    const catKey = cat.replace(/[^a-zA-Z0-9]/g, '_');
+    const catData = standingData[catKey] || {};
+    const items = Object.entries(catData);
+
+    const block = document.createElement('div');
+    block.className = 'section-block';
+
+    const header = document.createElement('div');
+    header.className = 'section-header';
+    header.innerHTML = `
+      <span class="section-banner">${cat}</span>
+      <button class="btn btn-ghost btn-sm" onclick="clearCheckedCategory('${catKey}')">Clear Checked</button>
+    `;
+    block.appendChild(header);
+
+    if (items.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.textContent = 'Nothing here yet.';
+      block.appendChild(empty);
+    }
+
+    items.forEach(([id, item]) => {
+      block.appendChild(makeStandingCard(catKey, id, item));
+    });
+
+    // Add row
+    const addRow = document.createElement('div');
+    addRow.className = 'add-row';
+    addRow.innerHTML = `
+      <input type="text" id="add-${catKey}" placeholder="Add item to ${cat}...">
+      <button class="btn btn-red btn-sm" onclick="addStandingItem('${catKey}')">+</button>
+    `;
+    const input = addRow.querySelector('input');
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') addStandingItem(catKey);
+    });
+    block.appendChild(addRow);
+    block.appendChild(document.createElement('hr') && (() => { const hr = document.createElement('hr'); hr.className = 'divider'; return hr; })());
+
+    container.appendChild(block);
+  });
+}
+
+function makeStandingCard(catKey, id, item) {
+  const card = document.createElement('div');
+  card.className = 'item-card' + (item.checked ? ' checked' : '');
+  card.innerHTML = `
+    <input type="checkbox" class="item-check" ${item.checked ? 'checked' : ''}
+      onchange="toggleStanding('${catKey}','${id}',this.checked)">
+    <span class="item-label" onclick="toggleStandingLabel('${catKey}','${id}')">${escHtml(item.name)}</span>
+    <button class="delete-btn" onclick="deleteStanding('${catKey}','${id}')">✕</button>
+  `;
+  return card;
+}
+
+function toggleStanding(catKey, id, checked) {
+  setSyncing(true);
+  ref(`standing/${catKey}/${id}/checked`).set(checked);
+}
+
+function toggleStandingLabel(catKey, id) {
+  const cur = (standingData[catKey] && standingData[catKey][id] && standingData[catKey][id].checked) || false;
+  toggleStanding(catKey, id, !cur);
+}
+
+function deleteStanding(catKey, id) {
+  setSyncing(true);
+  ref(`standing/${catKey}/${id}`).remove();
+}
+
+function addStandingItem(catKey) {
+  const input = document.getElementById('add-' + catKey);
+  const name = input.value.trim();
+  if (!name) return;
+  setSyncing(true);
+  ref(`standing/${catKey}`).push({ name, checked: false });
+  input.value = '';
+}
+
+function clearCheckedCategory(catKey) {
+  const catData = standingData[catKey] || {};
+  const updates = {};
+  Object.entries(catData).forEach(([id, item]) => {
+    if (item.checked) updates[id] = null;
+  });
+  if (Object.keys(updates).length) {
+    setSyncing(true);
+    ref(`standing/${catKey}`).update(updates);
+  }
+}
+
+// ── FINDS ──
+let findsData = {};
+
+function initFinds() {
+  ref('finds').on('value', snap => {
+    findsData = snap.val() || {};
+    renderFinds();
+    setSyncing(false);
+  });
+}
+
+function renderFinds() {
+  const list = document.getElementById('finds-list');
+  const items = Object.entries(findsData);
+  if (items.length === 0) {
+    list.innerHTML = '<div class="empty-state">No finds yet — check the Fearless Flyer!</div>';
+    return;
+  }
+  list.innerHTML = '';
+  items.forEach(([id, item]) => {
+    const card = document.createElement('div');
+    card.className = 'item-card' + (item.checked ? ' checked' : '');
+    card.innerHTML = `
+      <input type="checkbox" class="item-check" ${item.checked ? 'checked' : ''}
+        onchange="toggleFind('${id}',this.checked)">
+      <span class="item-label" onclick="toggleFindLabel('${id}')">${escHtml(item.name)}</span>
+      ${item.note ? `<span class="badge">${escHtml(item.note)}</span>` : ''}
+      ${item.isNew ? '<span class="new-badge">★ NEW</span>' : ''}
+      <button class="delete-btn" onclick="deleteFind('${id}')">✕</button>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function toggleFind(id, checked) {
+  setSyncing(true);
+  ref(`finds/${id}/checked`).set(checked);
+}
+
+function toggleFindLabel(id) {
+  const cur = (findsData[id] && findsData[id].checked) || false;
+  toggleFind(id, !cur);
+}
+
+function deleteFind(id) {
+  setSyncing(true);
+  ref(`finds/${id}`).remove();
+}
+
+function addFind() {
+  const name = document.getElementById('find-name').value.trim();
+  const note = document.getElementById('find-note').value.trim();
+  if (!name) return;
+  setSyncing(true);
+  ref('finds').push({ name, note, checked: false, isNew: true, addedAt: Date.now() });
+  document.getElementById('find-name').value = '';
+  document.getElementById('find-note').value = '';
+}
+
+document.getElementById('find-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('find-note').focus();
+});
+document.getElementById('find-note').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addFind();
+});
+
+function clearCheckedFinds() {
+  const updates = {};
+  Object.entries(findsData).forEach(([id, item]) => {
+    if (item.checked) updates[id] = null;
+  });
+  if (Object.keys(updates).length) {
+    setSyncing(true);
+    ref('finds').update(updates);
+  }
+}
+
+// ── COSTCO ──
+let costcoData = {};
+
+function initCostco() {
+  ref('costco').on('value', snap => {
+    costcoData = snap.val() || {};
+    renderCostco();
+    setSyncing(false);
+  });
+}
+
+function renderCostco() {
+  const list = document.getElementById('costco-list');
+  const items = Object.entries(costcoData);
+  if (items.length === 0) {
+    list.innerHTML = '<div class="empty-state">Nothing on the Costco list.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  items.forEach(([id, item]) => {
+    const card = document.createElement('div');
+    card.className = 'item-card navy-border' + (item.checked ? ' checked' : '');
+    card.innerHTML = `
+      <input type="checkbox" class="item-check navy" ${item.checked ? 'checked' : ''}
+        onchange="toggleCostco('${id}',this.checked)">
+      <span class="item-label" onclick="toggleCostcoLabel('${id}')">${escHtml(item.name)}</span>
+      <button class="delete-btn" onclick="deleteCostco('${id}')">✕</button>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function toggleCostco(id, checked) {
+  setSyncing(true);
+  ref(`costco/${id}/checked`).set(checked);
+}
+
+function toggleCostcoLabel(id) {
+  const cur = (costcoData[id] && costcoData[id].checked) || false;
+  toggleCostco(id, !cur);
+}
+
+function deleteCostco(id) {
+  setSyncing(true);
+  ref(`costco/${id}`).remove();
+}
+
+function addCostcoItem() {
+  const input = document.getElementById('costco-input');
+  const name = input.value.trim();
+  if (!name) return;
+  setSyncing(true);
+  ref('costco').push({ name, checked: false });
+  input.value = '';
+}
+
+document.getElementById('costco-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addCostcoItem();
+});
+
+function clearCheckedCostco() {
+  const updates = {};
+  Object.entries(costcoData).forEach(([id, item]) => {
+    if (item.checked) updates[id] = null;
+  });
+  if (Object.keys(updates).length) {
+    setSyncing(true);
+    ref('costco').update(updates);
+  }
+}
+
+// ── RESET WEEK ──
+function resetWeek() {
+  if (!confirm('Reset week? This will clear all checked items across all lists.')) return;
+  setSyncing(true);
+
+  // Clear checked standing items
+  Object.entries(standingData).forEach(([catKey, catData]) => {
+    Object.entries(catData).forEach(([id, item]) => {
+      if (item.checked) ref(`standing/${catKey}/${id}/checked`).set(false);
+    });
+  });
+  // Clear checked finds
+  Object.entries(findsData).forEach(([id, item]) => {
+    if (item.checked) ref(`finds/${id}/checked`).set(false);
+  });
+  // Clear checked costco
+  Object.entries(costcoData).forEach(([id, item]) => {
+    if (item.checked) ref(`costco/${id}/checked`).set(false);
+  });
+}
+
+// ── UTILS ──
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
