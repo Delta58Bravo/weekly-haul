@@ -417,6 +417,164 @@
       padding: 1rem 0;
     }
 
+    /* ── THE LIST — Meal Cards ── */
+    .the-list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .meal-count {
+      font-style: italic;
+      font-size: 0.85rem;
+      color: var(--ink-light);
+    }
+    .add-meal-form {
+      background: white;
+      border: 1px solid #c8bfaa;
+      border-top: 3px solid var(--tan);
+      border-radius: 4px;
+      padding: 1rem;
+      margin-bottom: 1.2rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .add-meal-form h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      color: var(--ink);
+      margin-bottom: 0.8rem;
+    }
+    .add-meal-form input,
+    .add-meal-form textarea {
+      width: 100%;
+      padding: 0.5rem 0.7rem;
+      border: 1px solid #c8bfaa;
+      border-radius: 3px;
+      font-family: 'Lora', serif;
+      font-size: 0.9rem;
+      background: var(--cream);
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+      resize: vertical;
+    }
+    .add-meal-form input:focus,
+    .add-meal-form textarea:focus { outline: none; border-color: var(--tan); }
+    .add-meal-form .hint {
+      font-size: 0.75rem;
+      font-style: italic;
+      color: var(--ink-light);
+      margin-bottom: 0.4rem;
+      display: block;
+    }
+    .btn-tan { background: var(--tan); color: white; }
+    .btn-tan:hover { background: #b8903d; }
+    .form-row-split {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .meal-card {
+      background: white;
+      border-left: 4px solid var(--tan);
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 0.7rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      overflow: hidden;
+      transition: box-shadow 0.15s;
+    }
+    .meal-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .meal-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 0.9rem;
+      cursor: pointer;
+      user-select: none;
+      gap: 0.5rem;
+    }
+    .meal-card-header:active { background: var(--cream); }
+    .meal-title-block { flex: 1; }
+    .meal-name {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--ink);
+    }
+    .meal-desc {
+      font-size: 0.8rem;
+      font-style: italic;
+      color: var(--ink-light);
+      margin-top: 0.15rem;
+    }
+    .meal-chevron {
+      color: var(--tan);
+      font-size: 0.9rem;
+      transition: transform 0.2s;
+      min-width: 16px;
+      text-align: center;
+    }
+    .meal-card.expanded .meal-chevron { transform: rotate(180deg); }
+    .meal-body {
+      display: none;
+      padding: 0 0.9rem 0.9rem;
+      border-top: 1px solid #ede7d9;
+    }
+    .meal-card.expanded .meal-body { display: block; }
+    .meal-section-label {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--tan);
+      margin: 0.7rem 0 0.3rem;
+    }
+    .meal-ingredients-list {
+      list-style: none;
+      padding: 0;
+    }
+    .meal-ingredients-list li {
+      font-size: 0.88rem;
+      color: var(--ink);
+      padding: 0.2rem 0;
+      border-bottom: 1px dotted #ddd5c4;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .meal-ingredients-list li::before {
+      content: '·';
+      color: var(--tan);
+      font-weight: bold;
+    }
+    .meal-recipe-text {
+      font-size: 0.88rem;
+      color: var(--ink);
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .meal-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.9rem;
+      flex-wrap: wrap;
+    }
+    .btn-add-week {
+      background: var(--green);
+      color: white;
+      flex: 1;
+      text-align: center;
+    }
+    .btn-add-week:hover { background: #1e3a0f; }
+    .meal-added-flash {
+      font-size: 0.8rem;
+      color: var(--green);
+      font-style: italic;
+      align-self: center;
+      display: none;
+    }
+
     /* Responsive */
     @media (max-width: 400px) {
       .tab-btn { font-size: 0.55rem; padding: 0.6rem 0.2rem; }
@@ -455,6 +613,7 @@
     <button class="tab-btn active" onclick="switchTab('suspects', this)">The Usual Suspects</button>
     <button class="tab-btn" onclick="switchTab('finds', this)">This Week's Finds</button>
     <button class="tab-btn" onclick="switchTab('costco', this)">Costco Run</button>
+    <button class="tab-btn" onclick="switchTab('thelist', this)">★ The List</button>
   </div>
 
   <!-- TAB 1: USUAL SUSPECTS -->
@@ -490,6 +649,36 @@
         <button class="btn btn-navy" onclick="addCostcoItem()">+</button>
       </div>
       <div id="costco-list"></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: THE LIST -->
+  <div id="tab-thelist" class="tab-panel">
+    <div class="the-list-header">
+      <span class="section-banner" style="background:var(--tan);margin:0">★ The Most Amazing Meals. Ever.</span>
+      <span class="meal-count" id="meal-count"></span>
+    </div>
+
+    <!-- Add Meal Form -->
+    <div class="add-meal-form" id="add-meal-form">
+      <h3>Add a Meal to The List</h3>
+      <input type="text" id="meal-name-input" placeholder="Meal name...">
+      <input type="text" id="meal-desc-input" placeholder="One-line description (optional)">
+      <span class="hint">Ingredients — one per line:</span>
+      <textarea id="meal-ingredients-input" rows="4" placeholder="Chicken thighs&#10;Flour tortillas&#10;Avocado&#10;Lime..."></textarea>
+      <span class="hint">Recipe / instructions (optional):</span>
+      <textarea id="meal-recipe-input" rows="4" placeholder="How to make it..."></textarea>
+      <input type="text" id="meal-notes-input" placeholder="Notes (optional — e.g. 'double the sauce', 'kids love this')">
+      <div class="form-row-split" style="margin-top:0.3rem">
+        <button class="btn btn-tan" onclick="addMeal()" style="flex:1">Add to The List →</button>
+        <button class="btn btn-ghost" onclick="toggleAddMealForm(false)">Cancel</button>
+      </div>
+    </div>
+
+    <div id="the-list-items"></div>
+
+    <div style="text-align:center;margin-top:0.5rem">
+      <button class="btn btn-ghost" id="show-add-meal-btn" onclick="toggleAddMealForm(true)" style="display:none">+ Add Another Meal</button>
     </div>
   </div>
 
@@ -559,6 +748,7 @@ function showApp() {
   initStanding();
   initFinds();
   initCostco();
+  initTheList();
   setSyncing(false);
 }
 
@@ -865,6 +1055,178 @@ function resetWeek() {
   Object.entries(costcoData).forEach(([id, item]) => {
     if (item.checked) ref(`costco/${id}/checked`).set(false);
   });
+}
+
+// ── THE LIST ──
+let theListData = {};
+
+function initTheList() {
+  ref('thelist').on('value', snap => {
+    theListData = snap.val() || {};
+    renderTheList();
+    setSyncing(false);
+  });
+}
+
+function renderTheList() {
+  const container = document.getElementById('the-list-items');
+  const countEl = document.getElementById('meal-count');
+  const showBtn = document.getElementById('show-add-meal-btn');
+  const meals = Object.entries(theListData);
+
+  countEl.textContent = meals.length ? `${meals.length} meal${meals.length !== 1 ? 's' : ''} in the vault` : '';
+
+  if (meals.length === 0) {
+    container.innerHTML = '<div class="empty-state" style="padding:2rem 0">The vault is empty. Add your first legendary meal above.</div>';
+    showBtn.style.display = 'none';
+    return;
+  }
+
+  // Sort by addedAt descending (newest first)
+  meals.sort((a, b) => (b[1].addedAt || 0) - (a[1].addedAt || 0));
+
+  container.innerHTML = '';
+  meals.forEach(([id, meal]) => {
+    container.appendChild(makeMealCard(id, meal));
+  });
+
+  showBtn.style.display = 'inline-block';
+}
+
+function makeMealCard(id, meal) {
+  const card = document.createElement('div');
+  card.className = 'meal-card';
+  card.id = 'meal-' + id;
+
+  const ingredients = Array.isArray(meal.ingredients)
+    ? meal.ingredients
+    : (meal.ingredients || '').split('\n').filter(Boolean);
+
+  const ingredientItems = ingredients.map(i =>
+    `<li>${escHtml(i.trim())}</li>`
+  ).join('');
+
+  card.innerHTML = `
+    <div class="meal-card-header" onclick="toggleMealExpand('${id}')">
+      <div class="meal-title-block">
+        <div class="meal-name">${escHtml(meal.name)}</div>
+        ${meal.description ? `<div class="meal-desc">${escHtml(meal.description)}</div>` : ''}
+      </div>
+      <span class="meal-chevron">▼</span>
+    </div>
+    <div class="meal-body">
+      ${ingredients.length ? `
+        <div class="meal-section-label">Ingredients</div>
+        <ul class="meal-ingredients-list">${ingredientItems}</ul>
+      ` : ''}
+      ${meal.recipe ? `
+        <div class="meal-section-label">Recipe</div>
+        <div class="meal-recipe-text">${escHtml(meal.recipe)}</div>
+      ` : ''}
+      ${meal.notes ? `
+        <div class="meal-section-label">Notes</div>
+        <div class="meal-recipe-text" style="font-style:italic">${escHtml(meal.notes)}</div>
+      ` : ''}
+      <div class="meal-actions">
+        <button class="btn btn-add-week" onclick="addMealToThisWeek('${id}')">🛒 Add to This Week's List</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteMeal('${id}')">Remove</button>
+      </div>
+      <span class="meal-added-flash" id="flash-${id}">✓ Added to This Week's Finds!</span>
+    </div>
+  `;
+  return card;
+}
+
+function toggleMealExpand(id) {
+  const card = document.getElementById('meal-' + id);
+  if (card) card.classList.toggle('expanded');
+}
+
+function addMeal() {
+  const name = document.getElementById('meal-name-input').value.trim();
+  if (!name) { alert('Meal name is required.'); return; }
+
+  const desc = document.getElementById('meal-desc-input').value.trim();
+  const ingredientsRaw = document.getElementById('meal-ingredients-input').value.trim();
+  const recipe = document.getElementById('meal-recipe-input').value.trim();
+  const notes = document.getElementById('meal-notes-input').value.trim();
+
+  const ingredients = ingredientsRaw
+    ? ingredientsRaw.split('\n').map(l => l.trim()).filter(Boolean)
+    : [];
+
+  setSyncing(true);
+  ref('thelist').push({
+    name,
+    description: desc,
+    ingredients,
+    recipe,
+    notes,
+    addedAt: Date.now()
+  });
+
+  // Clear form
+  ['meal-name-input','meal-desc-input','meal-ingredients-input','meal-recipe-input','meal-notes-input']
+    .forEach(id => document.getElementById(id).value = '');
+
+  toggleAddMealForm(false);
+}
+
+function deleteMeal(id) {
+  if (!confirm('Remove this meal from The List?')) return;
+  setSyncing(true);
+  ref(`thelist/${id}`).remove();
+}
+
+function addMealToThisWeek(id) {
+  const meal = theListData[id];
+  if (!meal) return;
+
+  const ingredients = Array.isArray(meal.ingredients)
+    ? meal.ingredients
+    : (meal.ingredients || '').split('\n').filter(Boolean);
+
+  if (!ingredients.length) {
+    alert('No ingredients saved for this meal.');
+    return;
+  }
+
+  setSyncing(true);
+  const pushes = ingredients.map(ingredient =>
+    ref('finds').push({
+      name: ingredient.trim(),
+      note: `From: ${meal.name}`,
+      checked: false,
+      isNew: true,
+      addedAt: Date.now()
+    })
+  );
+
+  Promise.all(pushes).then(() => {
+    const flash = document.getElementById('flash-' + id);
+    if (flash) {
+      flash.style.display = 'inline';
+      setTimeout(() => flash.style.display = 'none', 3000);
+    }
+    // Switch to Finds tab to show what was added
+    setTimeout(() => {
+      const findsBtn = document.querySelectorAll('.tab-btn')[1];
+      switchTab('finds', findsBtn);
+    }, 1200);
+  });
+}
+
+function toggleAddMealForm(show) {
+  const form = document.getElementById('add-meal-form');
+  const btn = document.getElementById('show-add-meal-btn');
+  if (show) {
+    form.style.display = 'block';
+    btn.style.display = 'none';
+    document.getElementById('meal-name-input').focus();
+  } else {
+    form.style.display = 'none';
+    if (Object.keys(theListData).length > 0) btn.style.display = 'inline-block';
+  }
 }
 
 // ── UTILS ──
