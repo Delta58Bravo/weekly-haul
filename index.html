@@ -665,6 +665,92 @@
       display: none;
     }
 
+    /* ── WEEK PLAN ── */
+    .week-meal-card {
+      background: white;
+      border-left: 4px solid var(--tan);
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 0.6rem;
+      padding: 0.7rem 0.9rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .week-meal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .week-meal-name {
+      font-family: 'Bodoni Moda', serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--ink);
+    }
+    .week-meal-stats {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.2rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .need-count {
+      font-size: 0.72rem;
+      color: var(--red);
+      font-weight: bold;
+    }
+    .covered-count {
+      font-size: 0.72rem;
+      color: var(--green);
+    }
+    .week-meal-ingredients {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.55rem;
+    }
+    .week-ingredient {
+      font-size: 0.7rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 10px;
+    }
+    .week-ingredient.needed {
+      background: #fff0f3;
+      color: var(--red);
+      border: 1px solid #ffd0d8;
+    }
+    .week-ingredient.covered {
+      background: var(--cream-dark);
+      color: var(--ink-light);
+      text-decoration: line-through;
+      opacity: 0.55;
+    }
+    .meal-picker-overlay {
+      background: white;
+      border: 2px solid var(--tan);
+      border-radius: 4px;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    .meal-picker-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px dotted #ddd5c4;
+      gap: 0.5rem;
+    }
+    .meal-picker-row:last-child { border-bottom: none; }
+    .meal-picker-name {
+      font-size: 0.88rem;
+      color: var(--ink);
+      flex: 1;
+    }
+    .add-meal-week-controls {
+      margin-top: 0.6rem;
+    }
+
     /* ── MOBILE FIXES ── */
 
     /* Prevent iOS auto-zoom on focus (triggered when font-size < 16px) */
@@ -785,7 +871,7 @@
 
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('suspects', this)">The Usual Suspects</button>
-    <button class="tab-btn" onclick="switchTab('finds', this)">This Week's Finds</button>
+    <button class="tab-btn" onclick="switchTab('meals', this)">This Week's Meals</button>
     <button class="tab-btn" onclick="switchTab('costco', this)">Costco Run</button>
     <button class="tab-btn" onclick="switchTab('thelist', this)">★ The List</button>
   </div>
@@ -793,22 +879,48 @@
   <!-- TAB 1: USUAL SUSPECTS -->
   <div id="tab-suspects" class="tab-panel active"></div>
 
-  <!-- TAB 2: THIS WEEK'S FINDS -->
-  <div id="tab-finds" class="tab-panel">
+  <!-- TAB 2: THIS WEEK'S MEALS -->
+  <div id="tab-meals" class="tab-panel">
+
+    <!-- Meal Plan Section -->
     <div class="section-block">
       <div class="section-header">
-        <span class="section-banner">★ This Week's Discoveries & One-Offs ♩</span>
-        <button class="btn btn-ghost btn-sm" onclick="clearCheckedFinds()">Clear Checked</button>
-      </div>
-      <div class="finds-add-form">
-        <input type="text" id="find-name" placeholder="What caught your eye this week?">
-        <div class="form-row">
-          <input type="text" id="find-note" placeholder="Note — e.g. Fearless Flyer find, seasonal, impulse buy" style="flex:1">
-          <button class="btn btn-red" onclick="addFind()">+ Add</button>
+        <div>
+          <span class="section-banner">This Week's Menu</span>
+          <span class="section-sub">The plan, lest we stare into the refrigerator indefinitely.</span>
         </div>
       </div>
-      <div id="finds-list"></div>
+
+      <div id="week-meals-list"></div>
+
+      <div class="add-meal-week-controls">
+        <button class="btn btn-tan btn-sm" id="show-meal-picker-btn" onclick="toggleMealPicker()">+ From The List</button>
+        <div id="meal-picker-list" style="display:none" class="meal-picker-overlay"></div>
+        <div class="add-row" style="margin-top:0.5rem">
+          <input type="text" id="custom-meal-name" placeholder="Or type a meal not in The List...">
+          <button class="btn btn-tan" onclick="addCustomMealToWeek()">+</button>
+        </div>
+      </div>
     </div>
+
+    <hr class="divider">
+
+    <!-- What You Need This Week -->
+    <div class="section-block">
+      <div class="section-header">
+        <div>
+          <span class="section-banner">What You Need ★</span>
+          <span class="section-sub">Not in your pantry. (read: go buy these.)</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearCheckedNeeds()">Clear Checked</button>
+      </div>
+      <div class="add-row" style="margin-bottom:0.8rem">
+        <input type="text" id="manual-need-input" placeholder="Add item manually...">
+        <button class="btn btn-red" onclick="addManualNeed()">+</button>
+      </div>
+      <div id="week-needs-list"></div>
+    </div>
+
   </div>
 
   <!-- TAB 3: COSTCO -->
@@ -964,7 +1076,7 @@ function showApp() {
   const tagline = SEASONAL_TAGLINES[new Date().getMonth()];
   document.querySelector('.app-masthead .subtitle').textContent = tagline;
   initStanding();
-  initFinds();
+  initWeekPlan();
   initCostco();
   initTheList();
   setSyncing(false);
@@ -1146,80 +1258,218 @@ function clearCheckedCategory(catKey) {
   }
 }
 
-// ── FINDS ──
-let findsData = {};
+// ── WEEK PLAN ──
+let weekPlanData = { meals: {}, needs: {} };
 
-function initFinds() {
-  ref('finds').on('value', snap => {
-    findsData = snap.val() || {};
-    renderFinds();
+function initWeekPlan() {
+  db.ref('/tj-list/weekplan').on('value', snap => {
+    const val = snap.val() || {};
+    weekPlanData = { meals: val.meals || {}, needs: val.needs || {} };
+    renderWeekPlan();
     setSyncing(false);
   });
 }
 
-function renderFinds() {
-  const list = document.getElementById('finds-list');
-  const items = Object.entries(findsData);
-  if (items.length === 0) {
-    list.innerHTML = '<div class="empty-state">No discoveries this week. The Fearless Flyer awaits your perusal.</div>';
+function renderWeekPlan() {
+  renderWeekMeals();
+  renderWeekNeeds();
+}
+
+function renderWeekMeals() {
+  const container = document.getElementById('week-meals-list');
+  const meals = Object.entries(weekPlanData.meals);
+  if (meals.length === 0) {
+    container.innerHTML = '<div class="empty-state">No meals planned yet — add from The List, or just tell me what you\'re making.</div>';
     return;
   }
-  list.innerHTML = '';
-  items.forEach(([id, item]) => {
-    const card = document.createElement('div');
-    card.className = 'item-card' + (item.checked ? ' checked' : '');
-    card.innerHTML = `
-      <input type="checkbox" class="item-check" ${item.checked ? 'checked' : ''}
-        onchange="toggleFind('${id}',this.checked)">
-      <span class="item-label" onclick="toggleFindLabel('${id}')">${escHtml(item.name)}</span>
-      ${item.note ? `<span class="badge">${escHtml(item.note)}</span>` : ''}
-      ${item.isNew ? '<span class="new-badge">★ NEW</span>' : ''}
-      <button class="delete-btn" onclick="deleteFind('${id}')">✕</button>
-    `;
-    list.appendChild(card);
+  container.innerHTML = '';
+  meals.forEach(([id, entry]) => {
+    const card = makeWeekMealCard(id, entry);
+    if (card) container.appendChild(card);
   });
 }
 
-function toggleFind(id, checked) {
+function makeWeekMealCard(id, entry) {
+  const isFromList = entry.type === 'thelist';
+  const meal = isFromList ? theListData[entry.mealId] : null;
+  const mealName = isFromList ? (meal ? meal.name : entry.name) : entry.name;
+
+  const rawIngredients = isFromList && meal
+    ? (Array.isArray(meal.ingredients) ? meal.ingredients : (meal.ingredients || '').split('\n').filter(Boolean))
+    : (entry.ingredients || []);
+  const ingredients = rawIngredients.filter(Boolean);
+
+  const covered = ingredients.filter(i => isInStandingList(i));
+  const needed  = ingredients.filter(i => !isInStandingList(i));
+
+  const card = document.createElement('div');
+  card.className = 'week-meal-card';
+  card.innerHTML = `
+    <div class="week-meal-header">
+      <div>
+        <div class="week-meal-name">${escHtml(mealName)}</div>
+        <div class="week-meal-stats">
+          ${needed.length  ? `<span class="need-count">★ ${needed.length} to buy</span>` : ''}
+          ${covered.length ? `<span class="covered-count">✓ ${covered.length} in pantry</span>` : ''}
+          ${!ingredients.length ? `<span style="font-style:italic;font-size:0.75rem;color:var(--ink-light)">No ingredients saved</span>` : ''}
+        </div>
+      </div>
+      <button class="delete-btn" title="Remove from this week" onclick="removeMealFromWeek('${id}')">✕</button>
+    </div>
+    ${ingredients.length ? `
+      <div class="week-meal-ingredients">
+        ${ingredients.map(i => `<span class="week-ingredient ${isInStandingList(i) ? 'covered' : 'needed'}">${escHtml(i)}</span>`).join('')}
+      </div>
+    ` : ''}
+  `;
+  return card;
+}
+
+function isInStandingList(ingredient) {
+  if (!ingredient || !ingredient.trim()) return false;
+  const norm = ingredient.toLowerCase().trim();
+  return Object.values(standingData).some(cat =>
+    Object.values(cat || {}).some(item => {
+      if (!item || !item.name) return false;
+      const n = item.name.toLowerCase().trim();
+      return n.includes(norm) || norm.includes(n);
+    })
+  );
+}
+
+function addMealToWeekFromList(mealId) {
+  const meal = theListData[mealId];
+  if (!meal) return;
   setSyncing(true);
-  ref(`finds/${id}/checked`).set(checked);
+
+  // Push meal to weekplan/meals
+  const weekMealRef = db.ref('/tj-list/weekplan/meals').push({
+    type: 'thelist', mealId, name: meal.name, addedAt: Date.now()
+  });
+  const weekMealId = weekMealRef.key;
+
+  // Push non-standing ingredients to weekplan/needs
+  const ingredients = Array.isArray(meal.ingredients)
+    ? meal.ingredients
+    : (meal.ingredients || '').split('\n').filter(Boolean);
+  const needed = ingredients.filter(i => !isInStandingList(i));
+  if (needed.length) {
+    const updates = {};
+    needed.forEach(ingredient => {
+      const key = db.ref('/tj-list/weekplan/needs').push().key;
+      updates[key] = { name: ingredient.trim(), source: meal.name, weekMealId, checked: false, addedAt: Date.now() };
+    });
+    db.ref('/tj-list/weekplan/needs').update(updates);
+  }
+  toggleMealPicker(false);
 }
 
-function toggleFindLabel(id) {
-  const cur = (findsData[id] && findsData[id].checked) || false;
-  toggleFind(id, !cur);
-}
-
-function deleteFind(id) {
-  setSyncing(true);
-  ref(`finds/${id}`).remove();
-}
-
-function addFind() {
-  const name = document.getElementById('find-name').value.trim();
-  const note = document.getElementById('find-note').value.trim();
+function addCustomMealToWeek() {
+  const input = document.getElementById('custom-meal-name');
+  const name = input.value.trim();
   if (!name) return;
   setSyncing(true);
-  ref('finds').push({ name, note, checked: false, isNew: true, addedAt: Date.now() });
-  document.getElementById('find-name').value = '';
-  document.getElementById('find-note').value = '';
+  db.ref('/tj-list/weekplan/meals').push({ type: 'custom', name, ingredients: [], addedAt: Date.now() });
+  input.value = '';
+}
+document.getElementById('custom-meal-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addCustomMealToWeek();
+});
+
+function removeMealFromWeek(id) {
+  setSyncing(true);
+  db.ref(`/tj-list/weekplan/meals/${id}`).remove();
+  // Remove associated needs
+  const updates = {};
+  Object.entries(weekPlanData.needs).forEach(([needId, need]) => {
+    if (need.weekMealId === id) updates[needId] = null;
+  });
+  if (Object.keys(updates).length) db.ref('/tj-list/weekplan/needs').update(updates);
 }
 
-document.getElementById('find-name').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('find-note').focus();
-});
-document.getElementById('find-note').addEventListener('keydown', e => {
-  if (e.key === 'Enter') addFind();
+function renderWeekNeeds() {
+  const container = document.getElementById('week-needs-list');
+  const needs = Object.entries(weekPlanData.needs);
+  if (needs.length === 0) {
+    container.innerHTML = '<div class="empty-state">All covered by your pantry, or no meals planned yet. Darn good, indeed.</div>';
+    return;
+  }
+  needs.sort((a, b) => (a[1].checked ? 1 : 0) - (b[1].checked ? 1 : 0));
+  container.innerHTML = '';
+  needs.forEach(([id, need]) => {
+    const card = document.createElement('div');
+    card.className = 'item-card' + (need.checked ? ' checked' : '');
+    card.innerHTML = `
+      <input type="checkbox" class="item-check" ${need.checked ? 'checked' : ''}
+        onchange="toggleNeed('${id}',this.checked)">
+      <div class="item-info">
+        <div class="item-name-row">
+          <span class="item-label" onclick="toggleNeedLabel('${id}')">${escHtml(need.name)}</span>
+        </div>
+        ${need.source ? `<span class="item-note">For: ${escHtml(need.source)}</span>` : ''}
+      </div>
+      <button class="delete-btn" onclick="deleteNeed('${id}')">✕</button>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function toggleNeed(id, checked) {
+  setSyncing(true);
+  db.ref(`/tj-list/weekplan/needs/${id}/checked`).set(checked);
+}
+function toggleNeedLabel(id) {
+  const cur = (weekPlanData.needs[id] && weekPlanData.needs[id].checked) || false;
+  toggleNeed(id, !cur);
+}
+function deleteNeed(id) {
+  setSyncing(true);
+  db.ref(`/tj-list/weekplan/needs/${id}`).remove();
+}
+function clearCheckedNeeds() {
+  const updates = {};
+  Object.entries(weekPlanData.needs).forEach(([id, need]) => {
+    if (need.checked) updates[id] = null;
+  });
+  if (Object.keys(updates).length) { setSyncing(true); db.ref('/tj-list/weekplan/needs').update(updates); }
+}
+function addManualNeed() {
+  const input = document.getElementById('manual-need-input');
+  const name = input.value.trim();
+  if (!name) return;
+  setSyncing(true);
+  db.ref('/tj-list/weekplan/needs').push({ name, source: 'Manual', checked: false, addedAt: Date.now() });
+  input.value = '';
+}
+document.getElementById('manual-need-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addManualNeed();
 });
 
-function clearCheckedFinds() {
-  const updates = {};
-  Object.entries(findsData).forEach(([id, item]) => {
-    if (item.checked) updates[id] = null;
-  });
-  if (Object.keys(updates).length) {
-    setSyncing(true);
-    ref('finds').update(updates);
+function toggleMealPicker(force) {
+  const picker = document.getElementById('meal-picker-list');
+  const btn = document.getElementById('show-meal-picker-btn');
+  const show = force !== undefined ? force : picker.style.display === 'none';
+  if (show) {
+    const meals = Object.entries(theListData);
+    if (meals.length === 0) {
+      picker.innerHTML = '<div class="empty-state" style="padding:0.5rem 0">No meals in The List yet. Add some first!</div>';
+    } else {
+      picker.innerHTML = '';
+      meals.forEach(([id, meal]) => {
+        const row = document.createElement('div');
+        row.className = 'meal-picker-row';
+        row.innerHTML = `
+          <span class="meal-picker-name">${escHtml(meal.name)}</span>
+          <button class="btn btn-tan btn-sm" onclick="addMealToWeekFromList('${id}')">Add →</button>
+        `;
+        picker.appendChild(row);
+      });
+    }
+    picker.style.display = 'block';
+    btn.textContent = '✕ Close';
+  } else {
+    picker.style.display = 'none';
+    btn.textContent = '+ From The List';
   }
 }
 
@@ -1297,7 +1547,7 @@ function clearCheckedCostco() {
 
 // ── RESET WEEK ──
 function resetWeek() {
-  if (!confirm('Turn the page on this week?\n\n· Your Usual Suspects will be unchecked — almond milk and all.\n· This Week\'s Finds will be cleared entirely.\n· Costco regulars will be unchecked and ready for the next run.\n· The List remains untouched — legends are forever.\n\nReally, you might want to do this.')) return;
+  if (!confirm('Turn the page on this week?\n\n· This week\'s meal plan and needs list will be cleared.\n· Your Usual Suspects will be unchecked — almond milk and all.\n· Costco regulars will be unchecked and ready for the next run.\n· The List remains untouched — legends are forever.\n\nReally, you might want to do this.')) return;
   setSyncing(true);
 
   // Batch uncheck standing items
@@ -1309,10 +1559,8 @@ function resetWeek() {
   });
   if (Object.keys(standingUpdates).length) db.ref('/tj-list').update(standingUpdates);
 
-  // Delete all finds
-  const findsUpdates = {};
-  Object.entries(findsData).forEach(([id]) => { findsUpdates[id] = null; });
-  if (Object.keys(findsUpdates).length) ref('finds').update(findsUpdates);
+  // Clear the week plan entirely (meals + needs)
+  db.ref('/tj-list/weekplan').remove();
 
   // Batch uncheck costco
   const costcoUpdates = {};
@@ -1446,41 +1694,17 @@ function deleteMeal(id) {
 }
 
 function addMealToThisWeek(id) {
-  const meal = theListData[id];
-  if (!meal) return;
-
-  const ingredients = Array.isArray(meal.ingredients)
-    ? meal.ingredients
-    : (meal.ingredients || '').split('\n').filter(Boolean);
-
-  if (!ingredients.length) {
-    alert('No ingredients saved for this meal.');
-    return;
+  // Adds to week plan (Tab 2) — not just ingredient dump
+  addMealToWeekFromList(id);
+  const flash = document.getElementById('flash-' + id);
+  if (flash) {
+    flash.style.display = 'inline';
+    setTimeout(() => { flash.style.display = 'none'; }, 3000);
   }
-
-  setSyncing(true);
-  const pushes = ingredients.map(ingredient =>
-    ref('finds').push({
-      name: ingredient.trim(),
-      note: `From: ${meal.name}`,
-      checked: false,
-      isNew: true,
-      addedAt: Date.now()
-    })
-  );
-
-  Promise.all(pushes).then(() => {
-    const flash = document.getElementById('flash-' + id);
-    if (flash) {
-      flash.style.display = 'inline';
-      setTimeout(() => { flash.style.display = 'none'; }, 3000);
-    }
-    // Switch to Finds tab to show what was added
-    setTimeout(() => {
-      const findsBtn = document.querySelector('.tab-btn[onclick*="finds"]');
-      if (findsBtn) switchTab('finds', findsBtn);
-    }, 1200);
-  });
+  setTimeout(() => {
+    const mealsBtn = document.querySelector('.tab-btn[onclick*="meals"]');
+    if (mealsBtn) switchTab('meals', mealsBtn);
+  }, 1200);
 }
 
 function toggleAddMealForm(show) {
