@@ -97,7 +97,7 @@
       border: 2px solid var(--ink);
       border-radius: 3px;
       font-family: 'Lora', serif;
-      font-size: 1.1rem;
+      font-size: max(1.1rem, 16px);
       background: var(--cream);
       color: var(--ink);
       text-align: center;
@@ -484,9 +484,10 @@
       font-size: 0.75rem;
       font-style: italic;
       color: var(--ink-light);
-      margin-top: 0.1rem;
+      margin-top: 0.15rem;
       cursor: pointer;
       line-height: 1.3;
+      padding: 0.1rem 0; /* extra tap height */
     }
     .item-note:hover { color: var(--tan); }
     .add-note-link {
@@ -495,6 +496,7 @@
       color: #c0b49a;
       margin-top: 0.1rem;
       cursor: pointer;
+      padding: 0.1rem 0;
     }
     .add-note-link:hover { color: var(--tan); }
 
@@ -663,9 +665,91 @@
       display: none;
     }
 
+    /* ── MOBILE FIXES ── */
+
+    /* Prevent iOS auto-zoom on focus (triggered when font-size < 16px) */
+    input[type="text"],
+    input[type="password"],
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+
+    /* Larger tap targets for action buttons — visual stays small, touch area grows */
+    .edit-btn, .delete-btn {
+      min-width: 36px;
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    /* Bigger checkboxes */
+    .item-check {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+    }
+    .item-check:checked::after {
+      font-size: 15px;
+    }
+
+    /* Bigger item card rows — easier tap */
+    .item-card {
+      padding: 0.65rem 0.75rem;
+    }
+
+    /* Remove iOS gray tap flash */
+    button, a, input, label {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
     /* Responsive */
-    @media (max-width: 400px) {
-      .tab-btn { font-size: 0.55rem; padding: 0.6rem 0.2rem; }
+    @media (max-width: 480px) {
+      /* Tabs: allow wrapping, keep readable */
+      .tab-btn {
+        font-size: 0.68rem;
+        line-height: 1.25;
+        padding: 0.55rem 0.2rem;
+        word-break: break-word;
+        hyphens: auto;
+      }
+
+      /* Masthead arrows: hide on very small screens */
+      .app-masthead .arrows {
+        font-size: 0.65rem;
+        letter-spacing: 0.1em;
+      }
+
+      /* Add rows: bigger touch targets */
+      .add-row input[type="text"] {
+        padding: 0.65rem 0.7rem;
+      }
+      .add-row .btn {
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Meal card header: bigger tap */
+      .meal-card-header {
+        padding: 0.9rem 0.9rem;
+      }
+
+      /* Section banner subtitle: slightly smaller */
+      .section-sub {
+        font-size: 0.7rem;
+      }
+
+      /* Reset button: full width on mobile */
+      .reset-area .btn {
+        width: 100%;
+        padding: 0.75rem;
+      }
     }
   </style>
 </head>
