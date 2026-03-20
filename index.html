@@ -698,7 +698,7 @@
     </div>
 
     <!-- Add Meal Form -->
-    <div class="add-meal-form" id="add-meal-form">
+    <div class="add-meal-form" id="add-meal-form" style="display:none">
       <h3>Chronicle a Legend</h3>
       <input type="text" id="meal-name-input" placeholder="What is this masterpiece called?">
       <input type="text" id="meal-desc-input" placeholder="One line — what makes it extraordinary?">
@@ -716,7 +716,7 @@
     <div class="the-list-vault">
       <div id="the-list-items"></div>
       <div style="text-align:center;margin-top:0.5rem">
-        <button class="btn btn-ghost" id="show-add-meal-btn" onclick="toggleAddMealForm(true)" style="display:none">+ Enshrine Another Legend</button>
+        <button class="btn btn-ghost" id="show-add-meal-btn" onclick="toggleAddMealForm(true)">+ Enshrine Another Legend</button>
       </div>
     </div>
   </div>
@@ -749,6 +749,18 @@ const CATEGORIES = [
   'Bakery',
   'Household'
 ];
+
+const EMPTY_QUIPS = {
+  'Produce': 'The verdant vanguard awaits. Quite the re-leaf, once it arrives.',
+  'Dairy & Eggs': 'Nothing here yet. We find this deeply unsettling.',
+  'Frozen': 'A frozen tundra of possibility. Untouched. Unexplored. Un-brrr-eakably good deals, pending your contribution.',
+  'Meat & Seafood': 'The protein department is empty. This is fine. This is fine.',
+  'Pantry & Dry Goods': 'The pantry is bare. The flavor architecture has yet to be commissioned.',
+  'Snacks': 'No snacks. We\'ll give you a moment.',
+  'Beverages': 'Thirsty? Add something. Post-haste.',
+  'Bakery': 'No carbs yet. We admire your restraint. It won\'t last.',
+  'Household': 'Nobody has bought the dish soap yet. You know what to do.'
+};
 
 const CATEGORY_SUBS = {
   'Produce': 'Nature\'s most beguiling offerings. Frighteningly fresh.',
@@ -866,17 +878,6 @@ function renderStanding() {
     if (items.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'empty-state';
-      const EMPTY_QUIPS = {
-        'Produce': 'The verdant vanguard awaits. Quite the re-leaf, once it arrives.',
-        'Dairy & Eggs': 'Nothing here yet. We find this deeply unsettling.',
-        'Frozen': 'A frozen tundra of possibility. Untouched. Unexplored. Un-brrr-eakably good deals, pending your contribution.',
-        'Meat & Seafood': 'The protein department is empty. This is fine. This is fine.',
-        'Pantry & Dry Goods': 'The pantry is bare. The flavor architecture has yet to be commissioned.',
-        'Snacks': 'No snacks. We\'ll give you a moment.',
-        'Beverages': 'Thirsty? Add something. Post-haste.',
-        'Bakery': 'No carbs yet. We admire your restraint. It won\'t last.',
-        'Household': 'Nobody has bought the dish soap yet. You know what to do.'
-      };
       empty.textContent = EMPTY_QUIPS[cat] || 'The shelves here are bare — but not for long.';
       block.appendChild(empty);
     }
@@ -1108,20 +1109,26 @@ function resetWeek() {
   if (!confirm('Turn the page on this week?\n\n· Your Usual Suspects will be unchecked — almond milk and all.\n· This Week\'s Finds will be cleared entirely.\n· Costco regulars will be unchecked and ready for the next run.\n· The List remains untouched — legends are forever.\n\nReally, you might want to do this.')) return;
   setSyncing(true);
 
-  // Clear checked standing items
+  // Batch uncheck standing items
+  const standingUpdates = {};
   Object.entries(standingData).forEach(([catKey, catData]) => {
     Object.entries(catData).forEach(([id, item]) => {
-      if (item.checked) ref(`standing/${catKey}/${id}/checked`).set(false);
+      if (item.checked) standingUpdates[`standing/${catKey}/${id}/checked`] = false;
     });
   });
-  // Delete all finds (they're one-off items, clear them on reset)
+  if (Object.keys(standingUpdates).length) db.ref('/tj-list').update(standingUpdates);
+
+  // Delete all finds
   const findsUpdates = {};
   Object.entries(findsData).forEach(([id]) => { findsUpdates[id] = null; });
   if (Object.keys(findsUpdates).length) ref('finds').update(findsUpdates);
-  // Clear checked costco
+
+  // Batch uncheck costco
+  const costcoUpdates = {};
   Object.entries(costcoData).forEach(([id, item]) => {
-    if (item.checked) ref(`costco/${id}/checked`).set(false);
+    if (item.checked) costcoUpdates[`${id}/checked`] = false;
   });
+  if (Object.keys(costcoUpdates).length) ref('costco').update(costcoUpdates);
 }
 
 // ── THE LIST ──
@@ -1277,8 +1284,8 @@ function addMealToThisWeek(id) {
     }
     // Switch to Finds tab to show what was added
     setTimeout(() => {
-      const findsBtn = document.querySelectorAll('.tab-btn')[1];
-      switchTab('finds', findsBtn);
+      const findsBtn = document.querySelector('.tab-btn[onclick*="finds"]');
+      if (findsBtn) switchTab('finds', findsBtn);
     }, 1200);
   });
 }
@@ -1292,7 +1299,7 @@ function toggleAddMealForm(show) {
     document.getElementById('meal-name-input').focus();
   } else {
     form.style.display = 'none';
-    if (Object.keys(theListData).length > 0) btn.style.display = 'inline-block';
+    btn.style.display = 'inline-block'; // Always accessible — vault may be empty
   }
 }
 
