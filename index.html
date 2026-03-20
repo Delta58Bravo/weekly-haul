@@ -446,6 +446,48 @@
       padding: 1rem 0;
     }
 
+    /* ── STANDING ITEM — Notes & Qty ── */
+    .item-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .item-name-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .qty-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--red);
+      border: 1px solid var(--red);
+      padding: 0.05rem 0.35rem;
+      border-radius: 2px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: 'Bodoni Moda', serif;
+    }
+    .qty-badge:hover { background: var(--red); color: white; }
+    .item-note {
+      display: block;
+      font-size: 0.75rem;
+      font-style: italic;
+      color: var(--ink-light);
+      margin-top: 0.1rem;
+      cursor: pointer;
+      line-height: 1.3;
+    }
+    .item-note:hover { color: var(--tan); }
+    .add-note-link {
+      display: block;
+      font-size: 0.7rem;
+      color: #c0b49a;
+      margin-top: 0.1rem;
+      cursor: pointer;
+    }
+    .add-note-link:hover { color: var(--tan); }
+
     /* ── THE LIST — Meal Cards ── */
     .the-list-header {
       display: flex;
@@ -661,7 +703,7 @@
   <div id="tab-finds" class="tab-panel">
     <div class="section-block">
       <div class="section-header">
-        <span class="section-banner">★ This Week's Discoveries & One-Offs</span>
+        <span class="section-banner">★ This Week's Discoveries & One-Offs ♩</span>
         <button class="btn btn-ghost btn-sm" onclick="clearCheckedFinds()">Clear Checked</button>
       </div>
       <div class="finds-add-form">
@@ -693,7 +735,7 @@
   <!-- TAB 4: THE LIST -->
   <div id="tab-thelist" class="tab-panel">
     <div class="the-list-header">
-      <span class="section-banner" style="background:var(--tan);margin:0">★ The Most Amazing Meals. Ever.</span>
+      <span class="section-banner" style="background:var(--tan);margin:0">★ The Most Amazing Meals. Ever. ♫</span>
       <span class="meal-count" id="meal-count"></span>
     </div>
 
@@ -728,6 +770,7 @@
   <div class="footer">
     <span class="sync-dot" id="sync-dot"></span>
     <span id="sync-label">Connected</span>
+    <span style="margin-left:0.8rem;opacity:0.5">· While supplies last.</span>
   </div>
 </div>
 
@@ -805,9 +848,27 @@ document.getElementById('gate-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') checkPassword();
 });
 
+const SEASONAL_TAGLINES = [
+  'New year. Same extraordinary aisle. Reliably.',
+  'Love is sweet. So are these values.',
+  'Spring is quite literally loading. So is your cart.',
+  'April showers bring May flowers — and, we daresay, a very good excuse to restock the pantry.',
+  'May we have this dance?',
+  'Summer. Officially.',
+  'Independence from boring groceries. Declared.',
+  'The dog days are delicious.',
+  'Fall is in the air. Your cart is at the ready.',
+  'Harvest season. Post-haste.',
+  'Gather ye groceries while ye may. The values are a-flying.',
+  'December: wherein the eggnog flows, and the values — improbably — remain.'
+];
+
 function showApp() {
   document.getElementById('gate').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  // Set seasonal tagline
+  const tagline = SEASONAL_TAGLINES[new Date().getMonth()];
+  document.querySelector('.app-masthead .subtitle').textContent = tagline;
   initStanding();
   initFinds();
   initCostco();
@@ -909,13 +970,40 @@ function renderStanding() {
 function makeStandingCard(catKey, id, item) {
   const card = document.createElement('div');
   card.className = 'item-card' + (item.checked ? ' checked' : '');
+  const qty = item.qty && item.qty > 1 ? item.qty : null;
   card.innerHTML = `
     <input type="checkbox" class="item-check" ${item.checked ? 'checked' : ''}
       onchange="toggleStanding('${catKey}','${id}',this.checked)">
-    <span class="item-label" onclick="toggleStandingLabel('${catKey}','${id}')">${escHtml(item.name)}</span>
+    <div class="item-info">
+      <div class="item-name-row">
+        <span class="item-label" onclick="toggleStandingLabel('${catKey}','${id}')">${escHtml(item.name)}</span>
+        ${qty ? `<span class="qty-badge" onclick="editQty('${catKey}','${id}')" title="Tap to change quantity">×${qty}</span>` : ''}
+      </div>
+      ${item.note
+        ? `<span class="item-note" onclick="editNote('${catKey}','${id}')">${escHtml(item.note)}</span>`
+        : `<span class="add-note-link" onclick="editNote('${catKey}','${id}')">＋ note</span>`}
+    </div>
     <button class="delete-btn" title="Remove from list forever" onclick="deleteStanding('${catKey}','${id}')">✕</button>
   `;
   return card;
+}
+
+function editNote(catKey, id) {
+  const current = (standingData[catKey] && standingData[catKey][id] && standingData[catKey][id].note) || '';
+  const newNote = prompt('Note for this item:\n(e.g. "Only TJ\'s unsweetened", "Kerrygold only")', current);
+  if (newNote === null) return;
+  setSyncing(true);
+  ref(`standing/${catKey}/${id}/note`).set(newNote.trim() || null);
+}
+
+function editQty(catKey, id) {
+  const current = (standingData[catKey] && standingData[catKey][id] && standingData[catKey][id].qty) || 1;
+  const newQty = prompt('How many do you need?', current);
+  if (newQty === null) return;
+  const n = parseInt(newQty);
+  if (isNaN(n) || n < 1) return;
+  setSyncing(true);
+  ref(`standing/${catKey}/${id}/qty`).set(n > 1 ? n : null);
 }
 
 function toggleStanding(catKey, id, checked) {
@@ -1151,7 +1239,9 @@ function renderTheList() {
   countEl.textContent = meals.length ? `${meals.length} meal${meals.length !== 1 ? 's' : ''} in the vault` : '';
 
   if (meals.length === 0) {
-    container.innerHTML = '<div class="empty-state" style="padding:2rem 0">No legends yet. Every great kitchen has its origin story — yours starts here.</div>';
+    container.innerHTML = `<div class="empty-state" style="padding:2rem 0;line-height:1.9;font-style:italic">
+      Recipes are red,<br>ingredients are true,<br>add your first masterpiece —<br>we daresay, it's long overdue.
+    </div>`;
     showBtn.style.display = 'none';
     return;
   }
