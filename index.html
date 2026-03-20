@@ -680,7 +680,7 @@
     <div class="section-block">
       <div class="section-header">
         <span class="section-banner navy">Costco Run</span>
-        <button class="btn btn-ghost btn-sm" onclick="clearCheckedCostco()">Clear Checked</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearCheckedCostco()">Uncheck All</button>
       </div>
       <div class="add-row" style="margin-bottom:0.8rem">
         <input type="text" id="costco-input" class="navy-focus" placeholder="Add item...">
@@ -859,7 +859,7 @@ function renderStanding() {
         <span class="section-banner">${cat}</span>
         ${CATEGORY_SUBS[cat] ? `<span class="section-sub">${CATEGORY_SUBS[cat]}</span>` : ''}
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="clearCheckedCategory('${catKey}')">Clear Checked</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearCheckedCategory('${catKey}')">Uncheck All</button>
     `;
     block.appendChild(header);
 
@@ -912,7 +912,7 @@ function makeStandingCard(catKey, id, item) {
     <input type="checkbox" class="item-check" ${item.checked ? 'checked' : ''}
       onchange="toggleStanding('${catKey}','${id}',this.checked)">
     <span class="item-label" onclick="toggleStandingLabel('${catKey}','${id}')">${escHtml(item.name)}</span>
-    <button class="delete-btn" onclick="deleteStanding('${catKey}','${id}')">✕</button>
+    <button class="delete-btn" title="Remove from list forever" onclick="deleteStanding('${catKey}','${id}')">✕</button>
   `;
   return card;
 }
@@ -942,10 +942,11 @@ function addStandingItem(catKey) {
 }
 
 function clearCheckedCategory(catKey) {
+  // Uncheck only — never delete standing items. They're permanent fixtures.
   const catData = standingData[catKey] || {};
   const updates = {};
   Object.entries(catData).forEach(([id, item]) => {
-    if (item.checked) updates[id] = null;
+    if (item.checked) updates[`${id}/checked`] = false;
   });
   if (Object.keys(updates).length) {
     setSyncing(true);
@@ -1056,7 +1057,7 @@ function renderCostco() {
       <input type="checkbox" class="item-check navy" ${item.checked ? 'checked' : ''}
         onchange="toggleCostco('${id}',this.checked)">
       <span class="item-label" onclick="toggleCostcoLabel('${id}')">${escHtml(item.name)}</span>
-      <button class="delete-btn" onclick="deleteCostco('${id}')">✕</button>
+      <button class="delete-btn" title="Remove from list forever" onclick="deleteCostco('${id}')">✕</button>
     `;
     list.appendChild(card);
   });
@@ -1091,9 +1092,10 @@ document.getElementById('costco-input').addEventListener('keydown', e => {
 });
 
 function clearCheckedCostco() {
+  // Uncheck only — Costco regulars persist just like standing items.
   const updates = {};
   Object.entries(costcoData).forEach(([id, item]) => {
-    if (item.checked) updates[id] = null;
+    if (item.checked) updates[`${id}/checked`] = false;
   });
   if (Object.keys(updates).length) {
     setSyncing(true);
@@ -1103,7 +1105,7 @@ function clearCheckedCostco() {
 
 // ── RESET WEEK ──
 function resetWeek() {
-  if (!confirm('Turn the page on this week?\n\n· Your Usual Suspects will be unchecked and ready for the next haul.\n· This Week\'s Finds will be cleared entirely.\n· The Costco list will be unchecked.\n· The List remains untouched — legends are forever.\n\nReally, you might want to do this.')) return;
+  if (!confirm('Turn the page on this week?\n\n· Your Usual Suspects will be unchecked — almond milk and all.\n· This Week\'s Finds will be cleared entirely.\n· Costco regulars will be unchecked and ready for the next run.\n· The List remains untouched — legends are forever.\n\nReally, you might want to do this.')) return;
   setSyncing(true);
 
   // Clear checked standing items
