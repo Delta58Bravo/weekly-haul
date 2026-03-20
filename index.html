@@ -320,6 +320,16 @@
       border-radius: 2px;
     }
 
+    .edit-btn {
+      background: none;
+      border: none;
+      color: #c0b49a;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0 0.2rem;
+      line-height: 1;
+    }
+    .edit-btn:hover { color: var(--tan); }
     .delete-btn {
       background: none;
       border: none;
@@ -983,9 +993,18 @@ function makeStandingCard(catKey, id, item) {
         ? `<span class="item-note" onclick="editNote('${catKey}','${id}')">${escHtml(item.note)}</span>`
         : `<span class="add-note-link" onclick="editNote('${catKey}','${id}')">＋ note</span>`}
     </div>
+    <button class="edit-btn" title="Rename item" onclick="editItemName('${catKey}','${id}')">✏</button>
     <button class="delete-btn" title="Remove from list forever" onclick="deleteStanding('${catKey}','${id}')">✕</button>
   `;
   return card;
+}
+
+function editItemName(catKey, id) {
+  const current = (standingData[catKey] && standingData[catKey][id] && standingData[catKey][id].name) || '';
+  const newName = prompt('Rename this item:', current);
+  if (newName === null || !newName.trim()) return;
+  setSyncing(true);
+  ref(`standing/${catKey}/${id}/name`).set(newName.trim());
 }
 
 function editNote(catKey, id) {
