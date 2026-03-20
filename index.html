@@ -139,11 +139,40 @@
       letter-spacing: 0.06em;
       line-height: 1;
     }
+    .app-masthead .arrows {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.75rem;
+      color: var(--ink-light);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 0.1rem;
+    }
+    .app-masthead .tagline {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--ink);
+      border-top: 1px solid var(--ink);
+      border-bottom: 1px solid var(--ink);
+      padding: 0.2rem 0;
+      margin: 0.3rem auto 0.4rem;
+      display: inline-block;
+    }
     .app-masthead .subtitle {
       font-style: italic;
       color: var(--navy);
-      font-size: 0.9rem;
-      margin: 0.2rem 0 0.8rem;
+      font-size: 0.85rem;
+      margin: 0 0 0.8rem;
+    }
+    .section-sub {
+      display: block;
+      font-family: 'Lora', serif;
+      font-style: italic;
+      font-size: 0.75rem;
+      color: var(--ink-light);
+      margin: 0.1rem 0 0.4rem;
     }
 
     /* Tabs */
@@ -426,6 +455,13 @@
       flex-wrap: wrap;
       gap: 0.5rem;
     }
+    .the-list-vault {
+      border: 2px solid var(--tan);
+      background: #fdf9f0;
+      border-radius: 3px;
+      padding: 0.8rem;
+      margin-top: 0.5rem;
+    }
     .meal-count {
       font-style: italic;
       font-size: 0.85rem;
@@ -591,7 +627,7 @@
   </div>
   <div class="rule"></div>
   <div class="gate-box">
-    <p>This flyer isn't for everyone. If you know, you know.</p>
+    <p>This flyer isn't for everyone. Quite <em>list</em>-erally, it's for the Bravo household only. If you know the passphrase — and we suspect you do — enter it below. <em>Post-haste.</em></p>
     <input type="password" id="gate-input" placeholder="••••••" autocomplete="off">
     <div class="remember-row">
       <input type="checkbox" id="remember-me">
@@ -605,7 +641,9 @@
 <!-- ── APP ── -->
 <div id="app">
   <div class="app-masthead">
+    <p class="arrows">←— Trader Joe's · Bravo Household —→</p>
     <h1>THE WEEKLY HAUL</h1>
+    <p class="tagline">As Always, Free. And Worth Every Penny.</p>
     <p class="subtitle"><em>Your weekly expedition into extraordinary groceries.</em></p>
   </div>
 
@@ -675,10 +713,11 @@
       </div>
     </div>
 
-    <div id="the-list-items"></div>
-
-    <div style="text-align:center;margin-top:0.5rem">
-      <button class="btn btn-ghost" id="show-add-meal-btn" onclick="toggleAddMealForm(true)" style="display:none">+ Enshrine Another Legend</button>
+    <div class="the-list-vault">
+      <div id="the-list-items"></div>
+      <div style="text-align:center;margin-top:0.5rem">
+        <button class="btn btn-ghost" id="show-add-meal-btn" onclick="toggleAddMealForm(true)" style="display:none">+ Enshrine Another Legend</button>
+      </div>
     </div>
   </div>
 
@@ -711,6 +750,18 @@ const CATEGORIES = [
   'Household'
 ];
 
+const CATEGORY_SUBS = {
+  'Produce': 'Nature\'s most beguiling offerings. Frighteningly fresh.',
+  'Dairy & Eggs': 'The cold, dependable foundations of every great meal.',
+  'Frozen': 'Flash-frozen at peak perfection. We think this results in the best tasting everything.',
+  'Meat & Seafood': 'The protein problem, solved. Really, you might say that.',
+  'Pantry & Dry Goods': 'The humble architecture of flavor. Indispensable. Underappreciated. Here.',
+  'Snacks': 'Look, we\'re not going to pretend these are optional.',
+  'Beverages': 'Hydration, elevated. (read: something worth drinking.)',
+  'Bakery': 'Carbs. Unashamedly.',
+  'Household': 'Somebody has to buy the dish soap. It might as well be you.'
+};
+
 // ── FIREBASE ──
 const firebaseConfig = {
   apiKey: "AIzaSyAZh0w7iqobGaP4JmkYzr0sTMTD2JuZW8Q",
@@ -734,7 +785,7 @@ function checkPassword() {
     }
     showApp();
   } else {
-    document.getElementById('gate-error').textContent = 'Not quite. The Flyer awaits the right passphrase.';
+    document.getElementById('gate-error').textContent = 'Not quite. (read: incorrect.) The Flyer remains sealed.';
     document.getElementById('gate-input').value = '';
   }
 }
@@ -804,7 +855,10 @@ function renderStanding() {
     const header = document.createElement('div');
     header.className = 'section-header';
     header.innerHTML = `
-      <span class="section-banner">${cat}</span>
+      <div>
+        <span class="section-banner">${cat}</span>
+        ${CATEGORY_SUBS[cat] ? `<span class="section-sub">${CATEGORY_SUBS[cat]}</span>` : ''}
+      </div>
       <button class="btn btn-ghost btn-sm" onclick="clearCheckedCategory('${catKey}')">Clear Checked</button>
     `;
     block.appendChild(header);
@@ -812,7 +866,18 @@ function renderStanding() {
     if (items.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'empty-state';
-      empty.textContent = 'The shelves here are bare — but not for long.';
+      const EMPTY_QUIPS = {
+        'Produce': 'The verdant vanguard awaits. Quite the re-leaf, once it arrives.',
+        'Dairy & Eggs': 'Nothing here yet. We find this deeply unsettling.',
+        'Frozen': 'A frozen tundra of possibility. Untouched. Unexplored. Un-brrr-eakably good deals, pending your contribution.',
+        'Meat & Seafood': 'The protein department is empty. This is fine. This is fine.',
+        'Pantry & Dry Goods': 'The pantry is bare. The flavor architecture has yet to be commissioned.',
+        'Snacks': 'No snacks. We\'ll give you a moment.',
+        'Beverages': 'Thirsty? Add something. Post-haste.',
+        'Bakery': 'No carbs yet. We admire your restraint. It won\'t last.',
+        'Household': 'Nobody has bought the dish soap yet. You know what to do.'
+      };
+      empty.textContent = EMPTY_QUIPS[cat] || 'The shelves here are bare — but not for long.';
       block.appendChild(empty);
     }
 
@@ -1038,7 +1103,7 @@ function clearCheckedCostco() {
 
 // ── RESET WEEK ──
 function resetWeek() {
-  if (!confirm('Turn the page on this week? Standing items will be unchecked and ready for the next haul. This Week\'s Finds will be cleared. Costco list will be unchecked.')) return;
+  if (!confirm('Turn the page on this week?\n\n· Your Usual Suspects will be unchecked and ready for the next haul.\n· This Week\'s Finds will be cleared entirely.\n· The Costco list will be unchecked.\n· The List remains untouched — legends are forever.\n\nReally, you might want to do this.')) return;
   setSyncing(true);
 
   // Clear checked standing items
@@ -1173,7 +1238,7 @@ function addMeal() {
 }
 
 function deleteMeal(id) {
-  if (!confirm('Remove this meal from The List?')) return;
+  if (!confirm('Honorably retire this meal from The List?\n\n(It had a good run. We think this results in the best-curated vault.)')) return;
   setSyncing(true);
   ref(`thelist/${id}`).remove();
 }
