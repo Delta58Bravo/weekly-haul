@@ -591,7 +591,7 @@
   </div>
   <div class="rule"></div>
   <div class="gate-box">
-    <p>Members only. Enter the password to continue.</p>
+    <p>This flyer isn't for everyone. If you know, you know.</p>
     <input type="password" id="gate-input" placeholder="••••••" autocomplete="off">
     <div class="remember-row">
       <input type="checkbox" id="remember-me">
@@ -606,7 +606,7 @@
 <div id="app">
   <div class="app-masthead">
     <h1>THE WEEKLY HAUL</h1>
-    <p class="subtitle">Trader Joe's Shopping List · Bravo Household</p>
+    <p class="subtitle"><em>Your weekly expedition into extraordinary groceries.</em></p>
   </div>
 
   <div class="tabs">
@@ -623,13 +623,13 @@
   <div id="tab-finds" class="tab-panel">
     <div class="section-block">
       <div class="section-header">
-        <span class="section-banner">★ New Arrivals & One-Offs</span>
+        <span class="section-banner">★ This Week's Discoveries & One-Offs</span>
         <button class="btn btn-ghost btn-sm" onclick="clearCheckedFinds()">Clear Checked</button>
       </div>
       <div class="finds-add-form">
-        <input type="text" id="find-name" placeholder="Item name...">
+        <input type="text" id="find-name" placeholder="What caught your eye this week?">
         <div class="form-row">
-          <input type="text" id="find-note" placeholder="Note (optional — e.g. Fearless Flyer find)" style="flex:1">
+          <input type="text" id="find-note" placeholder="Note — e.g. Fearless Flyer find, seasonal, impulse buy" style="flex:1">
           <button class="btn btn-red" onclick="addFind()">+ Add</button>
         </div>
       </div>
@@ -661,30 +661,30 @@
 
     <!-- Add Meal Form -->
     <div class="add-meal-form" id="add-meal-form">
-      <h3>Add a Meal to The List</h3>
-      <input type="text" id="meal-name-input" placeholder="Meal name...">
-      <input type="text" id="meal-desc-input" placeholder="One-line description (optional)">
+      <h3>Chronicle a Legend</h3>
+      <input type="text" id="meal-name-input" placeholder="What is this masterpiece called?">
+      <input type="text" id="meal-desc-input" placeholder="One line — what makes it extraordinary?">
       <span class="hint">Ingredients — one per line:</span>
       <textarea id="meal-ingredients-input" rows="4" placeholder="Chicken thighs&#10;Flour tortillas&#10;Avocado&#10;Lime..."></textarea>
-      <span class="hint">Recipe / instructions (optional):</span>
-      <textarea id="meal-recipe-input" rows="4" placeholder="How to make it..."></textarea>
-      <input type="text" id="meal-notes-input" placeholder="Notes (optional — e.g. 'double the sauce', 'kids love this')">
+      <span class="hint">The method — how it's done:</span>
+      <textarea id="meal-recipe-input" rows="4" placeholder="Share the technique..."></textarea>
+      <input type="text" id="meal-notes-input" placeholder="The wisdom — e.g. 'double the sauce', 'kids demand seconds'">
       <div class="form-row-split" style="margin-top:0.3rem">
-        <button class="btn btn-tan" onclick="addMeal()" style="flex:1">Add to The List →</button>
-        <button class="btn btn-ghost" onclick="toggleAddMealForm(false)">Cancel</button>
+        <button class="btn btn-tan" onclick="addMeal()" style="flex:1">Enshrine It →</button>
+        <button class="btn btn-ghost" onclick="toggleAddMealForm(false)">Not Yet</button>
       </div>
     </div>
 
     <div id="the-list-items"></div>
 
     <div style="text-align:center;margin-top:0.5rem">
-      <button class="btn btn-ghost" id="show-add-meal-btn" onclick="toggleAddMealForm(true)" style="display:none">+ Add Another Meal</button>
+      <button class="btn btn-ghost" id="show-add-meal-btn" onclick="toggleAddMealForm(true)" style="display:none">+ Enshrine Another Legend</button>
     </div>
   </div>
 
   <!-- RESET + FOOTER -->
   <div class="reset-area">
-    <button class="btn btn-ghost" onclick="resetWeek()">↺ Reset Week (clear all checked)</button>
+    <button class="btn btn-ghost" onclick="resetWeek()">↺ Turn the Page — Start a Fresh Week</button>
   </div>
   <div class="footer">
     <span class="sync-dot" id="sync-dot"></span>
@@ -734,7 +734,7 @@ function checkPassword() {
     }
     showApp();
   } else {
-    document.getElementById('gate-error').textContent = 'Wrong password. Try again.';
+    document.getElementById('gate-error').textContent = 'Not quite. The Flyer awaits the right passphrase.';
     document.getElementById('gate-input').value = '';
   }
 }
@@ -762,11 +762,11 @@ function setSyncing(active) {
   const label = document.getElementById('sync-label');
   if (active) {
     dot.className = 'sync-dot syncing';
-    label.textContent = 'Syncing...';
+    label.textContent = 'Consulting the storeroom...';
   } else {
     dot.className = 'sync-dot';
     const now = new Date();
-    label.textContent = 'Synced ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    label.textContent = 'All items accounted for · ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
   }
 }
 
@@ -812,7 +812,7 @@ function renderStanding() {
     if (items.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'empty-state';
-      empty.textContent = 'Nothing here yet.';
+      empty.textContent = 'The shelves here are bare — but not for long.';
       block.appendChild(empty);
     }
 
@@ -903,7 +903,7 @@ function renderFinds() {
   const list = document.getElementById('finds-list');
   const items = Object.entries(findsData);
   if (items.length === 0) {
-    list.innerHTML = '<div class="empty-state">No finds yet — check the Fearless Flyer!</div>';
+    list.innerHTML = '<div class="empty-state">No discoveries this week. The Fearless Flyer awaits your perusal.</div>';
     return;
   }
   list.innerHTML = '';
@@ -980,7 +980,7 @@ function renderCostco() {
   const list = document.getElementById('costco-list');
   const items = Object.entries(costcoData);
   if (items.length === 0) {
-    list.innerHTML = '<div class="empty-state">Nothing on the Costco list.</div>';
+    list.innerHTML = '<div class="empty-state">The warehouse stands ready. Add what the Trader cannot provide.</div>';
     return;
   }
   list.innerHTML = '';
@@ -1038,7 +1038,7 @@ function clearCheckedCostco() {
 
 // ── RESET WEEK ──
 function resetWeek() {
-  if (!confirm('Reset week? Standing items will be unchecked. This Week\'s Finds will be deleted. Costco items will be unchecked.')) return;
+  if (!confirm('Turn the page on this week? Standing items will be unchecked and ready for the next haul. This Week\'s Finds will be cleared. Costco list will be unchecked.')) return;
   setSyncing(true);
 
   // Clear checked standing items
@@ -1077,7 +1077,7 @@ function renderTheList() {
   countEl.textContent = meals.length ? `${meals.length} meal${meals.length !== 1 ? 's' : ''} in the vault` : '';
 
   if (meals.length === 0) {
-    container.innerHTML = '<div class="empty-state" style="padding:2rem 0">The vault is empty. Add your first legendary meal above.</div>';
+    container.innerHTML = '<div class="empty-state" style="padding:2rem 0">No legends yet. Every great kitchen has its origin story — yours starts here.</div>';
     showBtn.style.display = 'none';
     return;
   }
@@ -1128,10 +1128,10 @@ function makeMealCard(id, meal) {
         <div class="meal-recipe-text" style="font-style:italic">${escHtml(meal.notes)}</div>
       ` : ''}
       <div class="meal-actions">
-        <button class="btn btn-add-week" onclick="addMealToThisWeek('${id}')">🛒 Add to This Week's List</button>
-        <button class="btn btn-ghost btn-sm" onclick="deleteMeal('${id}')">Remove</button>
+        <button class="btn btn-add-week" onclick="addMealToThisWeek('${id}')">🛒 Shop This Meal →</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteMeal('${id}')">Retire</button>
       </div>
-      <span class="meal-added-flash" id="flash-${id}">✓ Added to This Week's Finds!</span>
+      <span class="meal-added-flash" id="flash-${id}">✓ Ingredients dispatched to This Week's Finds!</span>
     </div>
   `;
   return card;
@@ -1206,7 +1206,7 @@ function addMealToThisWeek(id) {
     const flash = document.getElementById('flash-' + id);
     if (flash) {
       flash.style.display = 'inline';
-      setTimeout(() => flash.style.display = 'none', 3000);
+      setTimeout(() => { flash.style.display = 'none'; }, 3000);
     }
     // Switch to Finds tab to show what was added
     setTimeout(() => {
