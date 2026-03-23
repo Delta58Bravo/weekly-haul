@@ -1593,7 +1593,8 @@ function renderTheList() {
     container.innerHTML = `<div class="empty-state" style="padding:2rem 0;line-height:1.9;font-style:italic">
       Recipes are red,<br>ingredients are true,<br>add your first masterpiece —<br>we daresay, it's long overdue.
     </div>`;
-    showBtn.style.display = 'none';
+    showBtn.textContent = '+ Enshrine a Legend';
+    showBtn.style.display = 'inline-block';
     return;
   }
 
@@ -1644,7 +1645,15 @@ function makeMealCard(id, meal) {
       ` : ''}
       <div class="meal-actions">
         <button class="btn btn-add-week" onclick="addMealToThisWeek('${id}')">🛒 Shop This Meal →</button>
+        <button class="btn btn-tan btn-sm" onclick="editMealIngredients('${id}')">✏ Ingredients</button>
         <button class="btn btn-ghost btn-sm" onclick="deleteMeal('${id}')">Retire</button>
+      </div>
+      <div id="edit-ingredients-${id}" style="display:none;margin-top:0.6rem">
+        <div class="meal-section-label">Add Ingredient</div>
+        <div class="add-row">
+          <input type="text" id="new-ingredient-${id}" placeholder="e.g. Chicken thighs">
+          <button class="btn btn-tan btn-sm" onclick="addIngredientToMeal('${id}')">+</button>
+        </div>
       </div>
       <span class="meal-added-flash" id="flash-${id}">✓ Ingredients dispatched to This Week's Finds!</span>
     </div>
@@ -1705,6 +1714,41 @@ function addMealToThisWeek(id) {
     const mealsBtn = document.querySelector('.tab-btn[onclick*="meals"]');
     if (mealsBtn) switchTab('meals', mealsBtn);
   }, 1200);
+}
+
+function editMealIngredients(id) {
+  const panel = document.getElementById('edit-ingredients-' + id);
+  if (!panel) return;
+  const isVisible = panel.style.display !== 'none';
+  panel.style.display = isVisible ? 'none' : 'block';
+  if (!isVisible) {
+    const input = document.getElementById('new-ingredient-' + id);
+    if (input) {
+      input.focus();
+      input.addEventListener('keydown', function handler(e) {
+        if (e.key === 'Enter') { addIngredientToMeal(id); }
+      });
+    }
+  }
+}
+
+function addIngredientToMeal(id) {
+  const input = document.getElementById('new-ingredient-' + id);
+  if (!input) return;
+  const ingredient = input.value.trim();
+  if (!ingredient) return;
+
+  const meal = theListData[id];
+  if (!meal) return;
+
+  const existing = Array.isArray(meal.ingredients)
+    ? meal.ingredients
+    : (meal.ingredients || '').split('\n').filter(Boolean);
+
+  const updated = [...existing, ingredient];
+  setSyncing(true);
+  ref(`thelist/${id}/ingredients`).set(updated);
+  input.value = '';
 }
 
 function toggleAddMealForm(show) {
