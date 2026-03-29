@@ -1138,15 +1138,21 @@ function switchTab(tab, btn) {
   btn.classList.add('active');
 }
 
-// ── STANDING LIST ──
-let standingData = {};
+// ── FLAT GROCERY LIST ──
+let flatListData = {}; // { id: { name, checked, order, note } }
+let dragState = { active: false, id: null, el: null, startY: 0, lastY: 0, timer: null, placeholder: null };
 
 function initStanding() {
-  ref('standing').on('value', snap => {
-    standingData = snap.val() || {};
+  ref('flat').on('value', snap => {
+    flatListData = snap.val() || {};
     renderStanding();
     setSyncing(false);
   });
+}
+
+function getSortedItems() {
+  return Object.entries(flatListData)
+    .sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
 }
 
 function renderStanding() {
@@ -1190,139 +1196,211 @@ function renderStanding() {
     container.appendChild(needsBlock);
   }
 
-  CATEGORIES.forEach(cat => {
-    const catKey = cat.replace(/[^a-zA-Z0-9]/g, '_');
-    const catData = standingData[catKey] || {};
-    const items = Object.entries(catData);
+  // ── FLAT GROCERY LIST ──
+  const listBlock = document.createElement('div');
+  listBlock.className = 'section-block';
 
-    const block = document.createElement('div');
-    block.className = 'section-block';
+  // Header
+  const header = document.createElement('div');
+  header.className = 'section-header';
+  header.innerHTML = `
+    <div>
+      <span class="section-banner">The List</span>
+      <span class="section-sub">Hold &amp; drag to reorder.</span>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="uncheckAllFlat()">Uncheck All</button>
+  `;
+  listBlock.appendChild(header);
 
-    const header = document.createElement('div');
-    header.className = 'section-header';
-    header.innerHTML = `
-      <div>
-        <span class="section-banner">${cat}</span>
-        ${CATEGORY_SUBS[cat] ? `<span class="section-sub">${CATEGORY_SUBS[cat]}</span>` : ''}
-      </div>
-      <button class="btn btn-ghost btn-sm" onclick="clearCheckedCategory('${catKey}')">Uncheck All</button>
-    `;
-    block.appendChild(header);
-
-    if (items.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'empty-state';
-      empty.textContent = EMPTY_QUIPS[cat] || 'The shelves here are bare — but not for long.';
-      block.appendChild(empty);
-    }
-
-    items.forEach(([id, item]) => {
-      block.appendChild(makeStandingCard(catKey, id, item));
-    });
-
-    // Add row
-    const addRow = document.createElement('div');
-    addRow.className = 'add-row';
-    addRow.innerHTML = `
-      <input type="text" id="add-${catKey}" placeholder="Add item to ${cat}...">
-      <button class="btn btn-red btn-sm" onclick="addStandingItem('${catKey}')">+</button>
-    `;
-    const input = addRow.querySelector('input');
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') addStandingItem(catKey);
-    });
-    block.appendChild(addRow);
-    const divider = document.createElement('hr');
-    divider.className = 'divider';
-    block.appendChild(divider);
-
-    container.appendChild(block);
+  // Add row
+  const addRow = document.createElement('div');
+  addRow.className = 'add-row';
+  addRow.innerHTML = `
+    <input type="text" id="add-flat-item" placeholder="Add item...">
+    <button class="btn btn-red" onclick="addFlatItem()">+</button>
+  `;
+  addRow.querySelector('input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addFlatItem();
   });
+  listBlock.appendChild(addRow);
+
+  const items = getSortedItems();
+  if (items.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = 'The list is empty. Add your first item above.';
+    listBlock.appendChild(empty);
+  }
+
+  const listEl = document.createElement('div');
+  listEl.id = 'flat-list-items';
+  listEl.style.cssText = 'margin-top:8px;';
+  items.forEach(([id, item]) => listEl.appendChild(makeFlatCard(id, item)));
+  listBlock.appendChild(listEl);
+  container.appendChild(listBlock);
 }
 
-function makeStandingCard(catKey, id, item) {
+function makeFlatCard(id, item) {
   const card = document.createElement('div');
   card.className = 'item-card' + (item.checked ? ' checked' : '');
-  const qty = item.qty && item.qty > 1 ? item.qty : null;
+  card.dataset.id = id;
+  card.style.cssText = 'cursor:default;user-select:none;touch-action:none;';
+
   card.innerHTML = `
+    <span class="drag-handle" style="font-size:18px;color:#c5bfb8;padding:0 8px 0 0;cursor:grab;flex-shrink:0;" title="Hold to drag">≡</span>
     <input type="checkbox" class="item-check" ${item.checked ? 'checked' : ''}
-      onchange="toggleStanding('${catKey}','${id}',this.checked)">
-    <div class="item-info">
+      onchange="toggleFlat('${id}',this.checked)">
+    <div class="item-info" style="flex:1;min-width:0;">
       <div class="item-name-row">
-        <span class="item-label" onclick="toggleStandingLabel('${catKey}','${id}')">${escHtml(item.name)}</span>
-        ${qty ? `<span class="qty-badge" onclick="editQty('${catKey}','${id}')" title="Tap to change quantity">×${qty}</span>` : ''}
+        <span class="item-label" onclick="toggleFlatLabel('${id}')">${escHtml(item.name)}</span>
       </div>
       ${item.note
-        ? `<span class="item-note" onclick="editNote('${catKey}','${id}')">${escHtml(item.note)}</span>`
-        : `<span class="add-note-link" onclick="editNote('${catKey}','${id}')">＋ note</span>`}
+        ? `<span class="item-note" onclick="editFlatNote('${id}')">${escHtml(item.note)}</span>`
+        : `<span class="add-note-link" onclick="editFlatNote('${id}')">＋ note</span>`}
     </div>
-    <button class="edit-btn" title="Rename item" onclick="editItemName('${catKey}','${id}')">✏</button>
-    <button class="delete-btn" title="Remove from list forever" onclick="deleteStanding('${catKey}','${id}')">✕</button>
+    <button class="edit-btn" title="Rename" onclick="editFlatName('${id}')">✏</button>
+    <button class="delete-btn" title="Remove" onclick="deleteFlat('${id}')">✕</button>
   `;
+
+  // Long-press drag
+  const handle = card.querySelector('.drag-handle');
+  handle.addEventListener('mousedown',  e => startDrag(e, card, id, false));
+  handle.addEventListener('touchstart', e => startDrag(e, card, id, true), { passive: false });
+
   return card;
 }
 
-function editItemName(catKey, id) {
-  const current = (standingData[catKey] && standingData[catKey][id] && standingData[catKey][id].name) || '';
+// ── DRAG AND DROP ──
+function startDrag(e, card, id, isTouch) {
+  e.preventDefault();
+  dragState.timer = setTimeout(() => {
+    dragState.active = true;
+    dragState.id = id;
+    dragState.el = card;
+    const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+    dragState.startY = clientY;
+    dragState.lastY = clientY;
+
+    card.style.opacity = '0.5';
+    card.style.transform = 'scale(1.02)';
+    card.style.boxShadow = '0 8px 24px rgba(0,0,0,0.18)';
+    card.style.zIndex = '100';
+    card.style.position = 'relative';
+
+    if (isTouch) {
+      document.addEventListener('touchmove', onDragMove, { passive: false });
+      document.addEventListener('touchend', onDragEnd);
+    } else {
+      document.addEventListener('mousemove', onDragMove);
+      document.addEventListener('mouseup', onDragEnd);
+    }
+  }, 400);
+
+  if (isTouch) {
+    card.addEventListener('touchend', () => clearTimeout(dragState.timer), { once: true });
+  } else {
+    card.addEventListener('mouseup', () => clearTimeout(dragState.timer), { once: true });
+  }
+}
+
+function onDragMove(e) {
+  if (!dragState.active) return;
+  e.preventDefault();
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  dragState.lastY = clientY;
+
+  const listEl = document.getElementById('flat-list-items');
+  if (!listEl) return;
+  const cards = [...listEl.querySelectorAll('.item-card')];
+  const dragEl = dragState.el;
+  const dragRect = dragEl.getBoundingClientRect();
+
+  cards.forEach(card => {
+    if (card === dragEl) return;
+    const rect = card.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    if (clientY < midY && card.previousSibling !== dragEl) {
+      listEl.insertBefore(dragEl, card);
+    } else if (clientY > midY && card.nextSibling !== dragEl) {
+      listEl.insertBefore(dragEl, card.nextSibling);
+    }
+  });
+}
+
+function onDragEnd(e) {
+  if (!dragState.active) return;
+  const card = dragState.el;
+  card.style.opacity = '';
+  card.style.transform = '';
+  card.style.boxShadow = '';
+  card.style.zIndex = '';
+  card.style.position = '';
+
+  // Save new order to Firebase
+  const listEl = document.getElementById('flat-list-items');
+  if (listEl) {
+    const cards = [...listEl.querySelectorAll('.item-card')];
+    const updates = {};
+    cards.forEach((c, i) => {
+      const cid = c.dataset.id;
+      if (cid) updates[`flat/${cid}/order`] = i;
+    });
+    if (Object.keys(updates).length) {
+      setSyncing(true);
+      db.ref('/tj-list').update(updates);
+    }
+  }
+
+  dragState.active = false;
+  dragState.id = null;
+  dragState.el = null;
+  document.removeEventListener('mousemove', onDragMove);
+  document.removeEventListener('mouseup', onDragEnd);
+  document.removeEventListener('touchmove', onDragMove);
+  document.removeEventListener('touchend', onDragEnd);
+}
+
+function toggleFlat(id, checked) {
+  setSyncing(true);
+  ref(`flat/${id}/checked`).set(checked);
+}
+function toggleFlatLabel(id) {
+  const cur = (flatListData[id] && flatListData[id].checked) || false;
+  toggleFlat(id, !cur);
+}
+function deleteFlat(id) {
+  setSyncing(true);
+  ref(`flat/${id}`).remove();
+}
+function editFlatName(id) {
+  const current = (flatListData[id] && flatListData[id].name) || '';
   const newName = prompt('Rename this item:', current);
   if (newName === null || !newName.trim()) return;
   setSyncing(true);
-  ref(`standing/${catKey}/${id}/name`).set(newName.trim());
+  ref(`flat/${id}/name`).set(newName.trim());
 }
-
-function editNote(catKey, id) {
-  const current = (standingData[catKey] && standingData[catKey][id] && standingData[catKey][id].note) || '';
-  const newNote = prompt('Note for this item:\n(e.g. "Only TJ\'s unsweetened", "Kerrygold only")', current);
+function editFlatNote(id) {
+  const current = (flatListData[id] && flatListData[id].note) || '';
+  const newNote = prompt('Note for this item:', current);
   if (newNote === null) return;
   setSyncing(true);
-  ref(`standing/${catKey}/${id}/note`).set(newNote.trim() || null);
+  ref(`flat/${id}/note`).set(newNote.trim() || null);
 }
-
-function editQty(catKey, id) {
-  const current = (standingData[catKey] && standingData[catKey][id] && standingData[catKey][id].qty) || 1;
-  const newQty = prompt('How many do you need?', current);
-  if (newQty === null) return;
-  const n = parseInt(newQty);
-  if (isNaN(n) || n < 1) return;
-  setSyncing(true);
-  ref(`standing/${catKey}/${id}/qty`).set(n > 1 ? n : null);
-}
-
-function toggleStanding(catKey, id, checked) {
-  setSyncing(true);
-  ref(`standing/${catKey}/${id}/checked`).set(checked);
-}
-
-function toggleStandingLabel(catKey, id) {
-  const cur = (standingData[catKey] && standingData[catKey][id] && standingData[catKey][id].checked) || false;
-  toggleStanding(catKey, id, !cur);
-}
-
-function deleteStanding(catKey, id) {
-  setSyncing(true);
-  ref(`standing/${catKey}/${id}`).remove();
-}
-
-function addStandingItem(catKey) {
-  const input = document.getElementById('add-' + catKey);
+function addFlatItem() {
+  const input = document.getElementById('add-flat-item');
   const name = input.value.trim();
   if (!name) return;
   setSyncing(true);
-  ref(`standing/${catKey}`).push({ name, checked: false });
+  const maxOrder = Object.values(flatListData).reduce((m, i) => Math.max(m, i.order || 0), -1);
+  ref('flat').push({ name, checked: false, order: maxOrder + 1 });
   input.value = '';
 }
-
-function clearCheckedCategory(catKey) {
-  // Uncheck only — never delete standing items. They're permanent fixtures.
-  const catData = standingData[catKey] || {};
+function uncheckAllFlat() {
   const updates = {};
-  Object.entries(catData).forEach(([id, item]) => {
+  Object.entries(flatListData).forEach(([id, item]) => {
     if (item.checked) updates[`${id}/checked`] = false;
   });
-  if (Object.keys(updates).length) {
-    setSyncing(true);
-    ref(`standing/${catKey}`).update(updates);
-  }
+  if (Object.keys(updates).length) { setSyncing(true); ref('flat').update(updates); }
 }
 
 // ── WEEK PLAN ──
@@ -1396,13 +1474,11 @@ function makeWeekMealCard(id, entry) {
 function isInStandingList(ingredient) {
   if (!ingredient || !ingredient.trim()) return false;
   const norm = ingredient.toLowerCase().trim();
-  return Object.values(standingData).some(cat =>
-    Object.values(cat || {}).some(item => {
-      if (!item || !item.name) return false;
-      const n = item.name.toLowerCase().trim();
-      return n.includes(norm) || norm.includes(n);
-    })
-  );
+  return Object.values(flatListData).some(item => {
+    if (!item || !item.name) return false;
+    const n = item.name.toLowerCase().trim();
+    return n.includes(norm) || norm.includes(n);
+  });
 }
 
 function addMealToWeekFromList(mealId) {
@@ -1618,12 +1694,10 @@ function resetWeek() {
   if (!confirm('Turn the page on this week?\n\n· This week\'s meal plan and needs list will be cleared.\n· Your Usual Suspects will be unchecked — almond milk and all.\n· Costco regulars will be unchecked and ready for the next run.\n· The List remains untouched — legends are forever.\n\nReally, you might want to do this.')) return;
   setSyncing(true);
 
-  // Batch uncheck standing items
+  // Batch uncheck flat list items
   const standingUpdates = {};
-  Object.entries(standingData).forEach(([catKey, catData]) => {
-    Object.entries(catData).forEach(([id, item]) => {
-      if (item.checked) standingUpdates[`standing/${catKey}/${id}/checked`] = false;
-    });
+  Object.entries(flatListData).forEach(([id, item]) => {
+    if (item.checked) standingUpdates[`flat/${id}/checked`] = false;
   });
   if (Object.keys(standingUpdates).length) db.ref('/tj-list').update(standingUpdates);
 
