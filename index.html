@@ -867,7 +867,6 @@
     <h1>THE WEEKLY HAUL</h1>
     <p class="tagline">As Always, Free. And Worth Every Penny.</p>
     <p class="subtitle"><em>Your weekly expedition into extraordinary groceries.</em></p>
-    <p style="margin-top:0.6rem;font-size:0.72rem;letter-spacing:0.08em;color:var(--red);font-weight:700;text-transform:uppercase;">⚠ Reminder: Bring Your Bags. Yes, Again. Every Single Time.</p>
   </div>
 
   <div class="tabs">
@@ -990,38 +989,68 @@
 const PASSWORD = 'Bravo';
 const CATEGORIES = [
   'Produce',
-  'Dairy & Eggs',
-  'Frozen',
-  'Meat & Seafood',
-  'Pantry & Dry Goods',
-  'Snacks',
+  'Cheese',
+  'Crackers',
+  'Lunch Meat',
+  'Meat',
+  'Dairy',
+  'Bread',
+  'Chips',
+  'Alcohol',
+  'Coffee',
+  'Granola Bars',
+  'Cereal',
   'Beverages',
-  'Bakery',
-  'Household'
+  'Pasta',
+  'Condiments',
+  'Canned Goods',
+  'Snacks',
+  'Ice Cream',
+  'Frozen Foods'
 ];
 
 const EMPTY_QUIPS = {
   'Produce': 'The verdant vanguard awaits. Quite the re-leaf, once it arrives.',
-  'Dairy & Eggs': 'Nothing here yet. We find this deeply unsettling.',
-  'Frozen': 'A frozen tundra of possibility. Untouched. Unexplored. Un-brrr-eakably good deals, pending your contribution.',
-  'Meat & Seafood': 'The protein department is empty. This is fine. This is fine.',
-  'Pantry & Dry Goods': 'The pantry is bare. The flavor architecture has yet to be commissioned.',
-  'Snacks': 'No snacks. We\'ll give you a moment.',
+  'Cheese': 'No cheese. This is a crisis.',
+  'Crackers': 'The cracker situation is unresolved. Address this.',
+  'Lunch Meat': 'Nothing here yet. The deli counter awaits.',
+  'Meat': 'The protein department is empty. This is fine. This is fine.',
+  'Dairy': 'Nothing here yet. We find this deeply unsettling.',
+  'Bread': 'No carbs yet. We admire your restraint. It won\'t last.',
+  'Chips': 'No chips. We\'ll give you a moment.',
+  'Alcohol': 'Nothing here. A bold choice. Perhaps intentional.',
+  'Coffee': 'No coffee listed. Alarming.',
+  'Granola Bars': 'The snack drawer is empty. You\'ll feel this later.',
+  'Cereal': 'No cereal. Breakfast is in crisis mode.',
   'Beverages': 'Thirsty? Add something. Post-haste.',
-  'Bakery': 'No carbs yet. We admire your restraint. It won\'t last.',
-  'Household': 'Nobody has bought the dish soap yet. You know what to do.'
+  'Pasta': 'No pasta. The carb contingency plan is void.',
+  'Condiments': 'Nothing here. Flavor is on hold.',
+  'Canned Goods': 'The pantry is bare. The flavor architecture has yet to be commissioned.',
+  'Snacks': 'No snacks. We\'ll give you a moment.',
+  'Ice Cream': 'No ice cream. We have concerns.',
+  'Frozen Foods': 'A frozen tundra of possibility. Untouched. Unexplored.'
 };
 
 const CATEGORY_SUBS = {
   'Produce': 'Nature\'s most beguiling offerings. Frighteningly fresh.',
-  'Dairy & Eggs': 'The cold, dependable foundations of every great meal.',
-  'Frozen': 'Flash-frozen at peak perfection. We think this results in the best tasting everything.',
-  'Meat & Seafood': 'The protein problem, solved. Really, you might say that.',
-  'Pantry & Dry Goods': 'The humble architecture of flavor. Indispensable. Underappreciated. Here.',
+  'Cheese': 'The good stuff. No apologies.',
+  'Crackers': 'Cheese\'s most loyal companion.',
+  'Lunch Meat': 'The dependable middle of every great sandwich.',
+  'Meat': 'The protein problem, solved.',
+  'Dairy': 'The cold, dependable foundations of every great meal.',
+  'Bread': 'Carbs. Unashamedly.',
+  'Chips': 'Look, we\'re not going to pretend these are optional.',
+  'Alcohol': 'The weekend deserves something worth opening.',
+  'Coffee': 'Non-negotiable. You know this.',
+  'Granola Bars': 'On-the-go fuel. The acceptable kind.',
+  'Cereal': 'The fastest meal you\'ll eat all week.',
+  'Beverages': 'Hydration, elevated.',
+  'Pasta': 'The humble architecture of flavor. Fast. Reliable. Always.',
+  'Condiments': 'The unsung heroes of every great meal.',
+  'Canned Goods': 'The pantry backbone. Understated. Indispensable.',
   'Snacks': 'Look, we\'re not going to pretend these are optional.',
-  'Beverages': 'Hydration, elevated. (read: something worth drinking.)',
-  'Bakery': 'Carbs. Unashamedly.',
-  'Household': 'Somebody has to buy the dish soap. It might as well be you.'
+  'Ice Cream': 'Dessert, elevated. Or just Tuesday.',
+  'Frozen Foods': 'Flash-frozen at peak perfection.'
 };
 
 // ── FIREBASE ──
@@ -1123,6 +1152,43 @@ function initStanding() {
 function renderStanding() {
   const container = document.getElementById('tab-suspects');
   container.innerHTML = '';
+
+  // ── THIS WEEK'S NEEDS (from meal plan) ──
+  const needs = Object.entries(weekPlanData && weekPlanData.needs ? weekPlanData.needs : {});
+  if (needs.length > 0) {
+    const needsBlock = document.createElement('div');
+    needsBlock.className = 'section-block';
+    needsBlock.innerHTML = `
+      <div class="section-header">
+        <div>
+          <span class="section-banner" style="background:var(--tan)">★ This Week's Needs</span>
+          <span class="section-sub">From your meal plan — go buy these.</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearCheckedNeeds()">Clear Checked</button>
+      </div>
+    `;
+    needs.sort((a, b) => (a[1].checked ? 1 : 0) - (b[1].checked ? 1 : 0));
+    needs.forEach(([id, need]) => {
+      const card = document.createElement('div');
+      card.className = 'item-card' + (need.checked ? ' checked' : '');
+      card.innerHTML = `
+        <input type="checkbox" class="item-check" ${need.checked ? 'checked' : ''}
+          onchange="toggleNeed('${id}',this.checked)">
+        <div class="item-info">
+          <div class="item-name-row">
+            <span class="item-label" onclick="toggleNeedLabel('${id}')">${escHtml(need.name)}</span>
+          </div>
+          ${need.source ? `<span class="item-note">For: ${escHtml(need.source)}</span>` : ''}
+        </div>
+        <button class="delete-btn" onclick="deleteNeed('${id}')">✕</button>
+      `;
+      needsBlock.appendChild(card);
+    });
+    const divider = document.createElement('hr');
+    divider.className = 'divider';
+    needsBlock.appendChild(divider);
+    container.appendChild(needsBlock);
+  }
 
   CATEGORIES.forEach(cat => {
     const catKey = cat.replace(/[^a-zA-Z0-9]/g, '_');
@@ -1274,6 +1340,7 @@ function initWeekPlan() {
 function renderWeekPlan() {
   renderWeekMeals();
   renderWeekNeeds();
+  renderStanding(); // refresh grocery list so This Week's Needs stays in sync
 }
 
 function renderWeekMeals() {
@@ -1647,6 +1714,7 @@ function makeMealCard(id, meal) {
       <div class="meal-actions">
         <button class="btn btn-add-week" onclick="addMealToThisWeek('${id}')">🛒 Shop This Meal →</button>
         <button class="btn btn-tan btn-sm" onclick="editMealIngredients('${id}')">✏ Ingredients</button>
+        <button class="btn btn-tan btn-sm" onclick="editMealRecipe('${id}')">✏ Directions</button>
         <button class="btn btn-ghost btn-sm" onclick="deleteMeal('${id}')">Retire</button>
       </div>
       <div id="edit-ingredients-${id}" style="display:none;margin-top:0.6rem">
@@ -1715,6 +1783,16 @@ function addMealToThisWeek(id) {
     const mealsBtn = document.querySelector('.tab-btn[onclick*="meals"]');
     if (mealsBtn) switchTab('meals', mealsBtn);
   }, 1200);
+}
+
+function editMealRecipe(id) {
+  const meal = theListData[id];
+  if (!meal) return;
+  const current = meal.recipe || '';
+  const updated = prompt('Edit directions / recipe:\n(tip: use line breaks for steps)', current);
+  if (updated === null) return;
+  setSyncing(true);
+  ref(`thelist/${id}/recipe`).set(updated.trim() || null);
 }
 
 function editMealIngredients(id) {
